@@ -5,17 +5,20 @@
 // Networking includes
 #include <netdb.h>
 #include <sys/types.h>
-#include <sys/socket.h>
+// #include <sys/socket.h>
 #include <string.h>
 #include <arpa/inet.h>
-#include <netinet/in.h>
+// #include <netinet/in.h>
 #include <unistd.h>
 // My own files includes
 #include "list.h"
+#include "Server.h"
+#include "Client.h"
 
 // CSIL MACHINE IP: 127.0.0.1
-// #define PORT 6969
+#define PORT 6969
 #define REMOTE_NAME_BUFFER 25 
+#define MSG_MAX_LENGTH 256
 
 // Will hold the args from command line
 int myPortNum, destPortNum;
@@ -29,8 +32,8 @@ void createUDPSocket();
 
 int main(int argc, char *argv[]) {
    initTalkArgs(argc, argv);
-   pthread_t server_thread;
-   pthread_create(server_thread, NULL, runServer, NULL);
+//    pthread_t server_thread;
+//    pthread_create(server_thread, NULL, runServer, NULL);
 
 
 }
@@ -46,28 +49,90 @@ void initTalkArgs(int argc, char *argv[]) {
     destPortNum = atoi(argv[3]);
 }
 
-void * runServer(void * arg) {
-    struct Server = server_constructor(AF_INET, SOCK_DGRAM, );
-    return NULL;
-}
+// void * runServer(void * arg) {
+//     // TODO: instead of INADDR_ANY, use user defined port which is argv[1]? NOT SURE
+//     struct Server myServer = server_constructor(AF_INET, SOCK_DGRAM, 0, INADDR_ANY, myPortNum);
 
 
-// using get getaddrinfo()
+//     return NULL;
+// }
+
+// Using this function to test to see if basic s-talk works
 void createUDPSocket() {
+    // Setup my socket(will be server) to receive msg from peer
+    struct sockaddr_in sin;
+    memset(&sin, 0, sizeof(sin)); 
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(PORT);
+    sin.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    struct addrinfo hints, *serverinfo, *print; // res and print will be used as **pointers
-    int addrinfo_status; // 0 if failed; otherwise success
-    
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;
+    int mySocketDescriptor = socket(PF_INET, SOCK_DGRAM, 0);
+    bind(mySocketDescriptor, (struct sockaddr*) &sin, sizeof(sin));
+
+    // TODO: Setup who I am receiving from (client?)
+
+    // TODO: see if i need this still
+    // struct sockaddr_in sinRemote;
+    // memset(&sinRemote, 0, sizeof(sinRemote));
+    // sinRemote.sin_family = AF_INET;
+    // sinRemote.sin_port = htons(destPortNum);
+
+    // Setup for getaddrinfo()
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
+    
+    struct addrinfo* destInfoResults;
+    char* portStr[10];
+    sprintf(portStr, "%s", destPortNum); // get the destination port number in a string
 
-    if ((addrinfo_status = getaddrinfo(NULL, "3333", &hints, &serverinfo)) != 0)
-    // // Print the information out
-    // char ipstr[INET6_ADDRSTRLEN];
+    int statusOfAddrInfo = getaddrinfo(destName, portStr, &hints, &destInfoResults);
+    if (statusOfAddrInfo != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(statusOfAddrInfo));
+        exit(EXIT_FAILURE);
+    }
+
+    struct sockaddr_in * sinRemote = (struct sockaddr_in*)destInfoResults->ai_addr;
+    unsigned int sinRemote_len = sizeof(struct sockaddr_in);
+   
+    // Receive message (like a server)
+    char messageRx[MSG_MAX_LENGTH];
+    // Blocking call to wait for msg to be received
+    int bytesRx = recvfrom(mySocketDescriptor, messageRx, MSG_MAX_LENGTH, 0,
+                    (struct sockaddr*) &sinRemote, &sinRemote_len); 
+    if (bytesRx == -1) { 
+        printf("Error in receiving message! Exiting program");
+        close(mySocketDescriptor);
+        exit(0); 
+    }
+    // Ensure it is a null terminated string
+    int terminateMessageIndex = (bytesRx < MSG_MAX_LENGTH) ? bytesRx : MSG_MAX_LENGTH - 1;
+    messageRx[terminateMessageIndex] = 0;
+    // Print it out to console
+    printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx);
+
+    close(mySocketDescriptor);
+    freeaddrinfo(destInfoResults);
+}   
 
 
-    freeaddrinfo(serverinfo); // free the linked-list
-}
+// // using get getaddrinfo()
+// void createUDPSocket() {
+
+//     struct addrinfo hints, *serverinfo, *print; // res and print will be used as **pointers
+//     int addrinfo_status; // 0 if failed; otherwise success
+    
+//     memset(&hints, 0, sizeof hints);
+//     hints.ai_family = AF_UNSPEC;
+//     hints.ai_socktype = SOCK_DGRAM;
+//     hints.ai_flags = AI_PASSIVE;
+
+//     if ((addrinfo_status = getaddrinfo(NULL, "3333", &hints, &serverinfo)) != 0)
+//     // // Print the information out
+//     // char ipstr[INET6_ADDRSTRLEN];
+
+
+//     freeaddrinfo(serverinfo); // free the linked-list
+// }
 
