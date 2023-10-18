@@ -5,10 +5,8 @@
 // Networking includes
 #include <netdb.h>
 #include <sys/types.h>
-// #include <sys/socket.h>
 #include <string.h>
 #include <arpa/inet.h>
-// #include <netinet/in.h>
 #include <unistd.h>
 // My own files includes
 #include "list.h"
@@ -35,7 +33,6 @@ int main(int argc, char *argv[]) {
 //    pthread_t server_thread;
 //    pthread_create(server_thread, NULL, runServer, NULL);
 
-
 }
 
 void initTalkArgs(int argc, char *argv[]) {
@@ -58,7 +55,7 @@ void initTalkArgs(int argc, char *argv[]) {
 // }
 
 // Using this function to test to see if basic s-talk works
-void createUDPSocket() {
+void setupAndReceiveMessage() {
     // Setup my socket(will be server) to receive msg from peer
     struct sockaddr_in sin;
     memset(&sin, 0, sizeof(sin)); 
@@ -66,12 +63,10 @@ void createUDPSocket() {
     sin.sin_port = htons(PORT);
     sin.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    int mySocketDescriptor = socket(PF_INET, SOCK_DGRAM, 0);
+    int mySocketDescriptor = socket(AF_INET, SOCK_DGRAM, 0);
     bind(mySocketDescriptor, (struct sockaddr*) &sin, sizeof(sin));
 
-    // TODO: Setup who I am receiving from (client?)
-
-    // TODO: see if i need this still
+    // TODO: see if i need this still PROB DONT!
     // struct sockaddr_in sinRemote;
     // memset(&sinRemote, 0, sizeof(sinRemote));
     // sinRemote.sin_family = AF_INET;
@@ -115,24 +110,4 @@ void createUDPSocket() {
     close(mySocketDescriptor);
     freeaddrinfo(destInfoResults);
 }   
-
-
-// // using get getaddrinfo()
-// void createUDPSocket() {
-
-//     struct addrinfo hints, *serverinfo, *print; // res and print will be used as **pointers
-//     int addrinfo_status; // 0 if failed; otherwise success
-    
-//     memset(&hints, 0, sizeof hints);
-//     hints.ai_family = AF_UNSPEC;
-//     hints.ai_socktype = SOCK_DGRAM;
-//     hints.ai_flags = AI_PASSIVE;
-
-//     if ((addrinfo_status = getaddrinfo(NULL, "3333", &hints, &serverinfo)) != 0)
-//     // // Print the information out
-//     // char ipstr[INET6_ADDRSTRLEN];
-
-
-//     freeaddrinfo(serverinfo); // free the linked-list
-// }
 
