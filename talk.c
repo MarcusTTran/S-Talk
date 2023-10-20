@@ -17,6 +17,7 @@
 #define PORT 6969
 #define REMOTE_NAME_BUFFER 25 
 #define MSG_MAX_LENGTH 256
+#define FLAGS_DEFAULT 0
 
 // Will hold the args from command line
 int myPortNum, destPortNum;
@@ -66,12 +67,6 @@ void setupAndReceiveMessage() {
     int mySocketDescriptor = socket(AF_INET, SOCK_DGRAM, 0);
     bind(mySocketDescriptor, (struct sockaddr*) &sin, sizeof(sin));
 
-    // TODO: see if i need this still PROB DONT!
-    // struct sockaddr_in sinRemote;
-    // memset(&sinRemote, 0, sizeof(sinRemote));
-    // sinRemote.sin_family = AF_INET;
-    // sinRemote.sin_port = htons(destPortNum);
-
     // Setup for getaddrinfo()
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
@@ -99,6 +94,7 @@ void setupAndReceiveMessage() {
     if (bytesRx == -1) { 
         printf("Error in receiving message! Exiting program");
         close(mySocketDescriptor);
+        freeaddrinfo(destInfoResults);
         exit(0); 
     }
     // Ensure it is a null terminated string
@@ -107,7 +103,25 @@ void setupAndReceiveMessage() {
     // Print it out to console
     printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx);
 
+    // Send a message back (Reply)
+    char replyTx[] = "Your message was received\n";
+    // int replyResult = replyToSender(replyTx, mySocketDescriptor, sinRemote);
+    replyToSender(replyTx, mySocketDescriptor, sinRemote);
+    
+
     close(mySocketDescriptor);
     freeaddrinfo(destInfoResults);
 }   
+
+// Sends a reply in the form of a char[] to a sender name sinRemote using a user-specified socket
+int replyToSender(const char message[], int mySocket, struct sockaddr_in * sinRemote) { 
+    socklen_t sinRemoteLen = sizeof(*sinRemote);
+    int bytesTx = sendto(mySocket, message, strlen(message), FLAGS_DEFAULT, 
+        (struct sockaddr*) &sinRemote, &sinRemoteLen);
+    if (bytesTx == -1) {
+        printf("Error occured in replying!\n");
+        return -1;
+    }
+    return 0;
+}
 
