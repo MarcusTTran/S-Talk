@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
    initTalkArgs(argc, argv);
 //    pthread_t server_thread;
 //    pthread_create(server_thread, NULL, runServer, NULL);
-
+    setupAndReceiveMessage();
 }
 
 void initTalkArgs(int argc, char *argv[]) {
@@ -48,7 +48,7 @@ void initTalkArgs(int argc, char *argv[]) {
 }
 
 // void * runServer(void * arg) {
-//     // TODO: instead of INADDR_ANY, use user defined port which is argv[1]? NOT SURE
+
 //     struct Server myServer = server_constructor(AF_INET, SOCK_DGRAM, 0, INADDR_ANY, myPortNum);
 
 
@@ -61,10 +61,10 @@ void setupAndReceiveMessage() {
     struct sockaddr_in sin;
     memset(&sin, 0, sizeof(sin)); 
     sin.sin_family = AF_INET;
-    sin.sin_port = htons(PORT);
-    sin.sin_addr.s_addr = htonl(INADDR_ANY);
+    sin.sin_port = htons(myPortNum); 
+    sin.sin_addr.s_addr = htonl(INADDR_ANY); // TODO: change this to the IP address of our computer
 
-    int mySocketDescriptor = socket(AF_INET, SOCK_DGRAM, 0);
+    int mySocketDescriptor = socket(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT);
     bind(mySocketDescriptor, (struct sockaddr*) &sin, sizeof(sin));
 
     // Setup for getaddrinfo()
@@ -104,7 +104,8 @@ void setupAndReceiveMessage() {
     printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx);
 
     // Send a message back (Reply)
-    char replyTx[] = "Your message was received\n";
+    char replyTx[MSG_MAX_LENGTH];
+    sprintf(replyTx, "Your message was received: \n(%s)\n", messageRx);
     // int replyResult = replyToSender(replyTx, mySocketDescriptor, sinRemote);
     replyToSender(replyTx, mySocketDescriptor, sinRemote);
     

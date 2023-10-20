@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#define PROTOCOL 0
+#define PROTOCOL_DEFAULT 0
 
 typedef unsigned long u_long;
 
