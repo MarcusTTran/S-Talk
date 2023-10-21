@@ -8,11 +8,13 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+
 // My own files includes
 #include "list.h"
 #include "Server.h"
 #include "Client.h"
 #include "input.c"
+// #include "output.c"
 
 // CSIL MACHINE IP: 127.0.0.1
 #define PORT 6969
