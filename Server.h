@@ -9,13 +9,18 @@
 typedef unsigned long u_long;
 
 struct Server {
+    // For the socket
     int domain;
     int service;
     int protocol;
+    int socket;
+
+    // for ip address
     u_long interface;
     int port;
     struct sockaddr_in address;
-    int socket;
+    
+
 
 };
 

@@ -12,11 +12,12 @@
 #include "list.h"
 #include "Server.h"
 #include "Client.h"
+#include "input.c"
 
 // CSIL MACHINE IP: 127.0.0.1
 #define PORT 6969
 #define REMOTE_NAME_BUFFER 25 
-#define MSG_MAX_LENGTH 256
+// #define MSG_MAX_LENGTH 256
 #define FLAGS_DEFAULT 0
 
 // Will hold the args from command line
@@ -25,8 +26,10 @@ char destName[REMOTE_NAME_BUFFER];
 
 // Function headers
 void initTalkArgs(int argc, char *argv[]);
-void * runServer(void * arg);
-void createUDPSocket();
+// void * runServer(void * arg);
+void setupAndReceiveMessage();
+int replyToSender();
+
 
 
 int main(int argc, char *argv[]) {
@@ -74,8 +77,8 @@ void setupAndReceiveMessage() {
     hints.ai_socktype = SOCK_DGRAM;
     
     struct addrinfo* destInfoResults;
-    char* portStr[10];
-    sprintf(portStr, "%s", destPortNum); // get the destination port number in a string
+    char portStr[10];
+    sprintf(portStr, "%d", destPortNum); // get the destination port number in a string
 
     int statusOfAddrInfo = getaddrinfo(destName, portStr, &hints, &destInfoResults);
     if (statusOfAddrInfo != 0) {
@@ -104,12 +107,11 @@ void setupAndReceiveMessage() {
     printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx);
 
     // Send a message back (Reply)
-    char replyTx[MSG_MAX_LENGTH];
-    sprintf(replyTx, "Your message was received: \n(%s)\n", messageRx);
+    char replyTx[MSG_MAX_LENGTH] = "Your message was received!\n";
+    // sprintf(replyTx, "Your message was received: \n(%s)\n", messageRx);
     // int replyResult = replyToSender(replyTx, mySocketDescriptor, sinRemote);
     replyToSender(replyTx, mySocketDescriptor, sinRemote);
     
-
     close(mySocketDescriptor);
     freeaddrinfo(destInfoResults);
 }   
@@ -118,7 +120,7 @@ void setupAndReceiveMessage() {
 int replyToSender(const char message[], int mySocket, struct sockaddr_in * sinRemote) { 
     socklen_t sinRemoteLen = sizeof(*sinRemote);
     int bytesTx = sendto(mySocket, message, strlen(message), FLAGS_DEFAULT, 
-        (struct sockaddr*) &sinRemote, &sinRemoteLen);
+        (struct sockaddr*) &sinRemote, sinRemoteLen);
     if (bytesTx == -1) {
         printf("Error occured in replying!\n");
         return -1;
