@@ -9,5 +9,10 @@ struct Server server_constructor(int domain, int service, int protocol, u_long i
 
     // initialize member fields of server
     server.domain = domain;
-    
+    server.service = service;
+    server.protocol = protocol;
+    server.interface = interface;
+    server.port = port;
+
+    return server;
 }
