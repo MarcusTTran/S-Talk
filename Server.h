@@ -1,12 +1,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-
-#define PROTOCOL_DEFAULT 0
-
-typedef unsigned long u_long;
+#include "headers.h"
 
 struct Server {
     // For the socket

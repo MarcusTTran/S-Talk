@@ -2,19 +2,15 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
-// Networking includes
-#include <netdb.h>
-#include <sys/types.h>
 #include <string.h>
-#include <arpa/inet.h>
-#include <unistd.h>
 
 // My own files includes
 #include "list.h"
 #include "Server.h"
 #include "Client.h"
 #include "input.c"
-// #include "output.c"
+#include "output.c"
+#include "headers.h"
 
 // CSIL MACHINE IP: 127.0.0.1
 #define PORT 6969
@@ -22,23 +18,32 @@
 // #define MSG_MAX_LENGTH 256
 #define FLAGS_DEFAULT 0
 
-// Will hold the args from command line
-int myPortNum, destPortNum;
-char destName[REMOTE_NAME_BUFFER];
-
 // Function headers
 void initTalkArgs(int argc, char *argv[]);
 // void * runServer(void * arg);
 void setupAndReceiveMessage();
 int replyToSender();
 
+// Will hold the args from command line
+int myPortNum, destPortNum;
+char destName[REMOTE_NAME_BUFFER];
+
+// GLOBAL Variables
+struct Server serverRx;
+struct Client clientTx;
+
+
 
 
 int main(int argc, char *argv[]) {
-   initTalkArgs(argc, argv);
+    struct Server serverRx;
+    struct Client clientTx;
+    initTalkArgs(argc, argv);
+    createServer(serverRx);
+    createClient(clientTx);
 //    pthread_t server_thread;
 //    pthread_create(server_thread, NULL, runServer, NULL);
-    setupAndReceiveMessage();
+    
 }
 
 void initTalkArgs(int argc, char *argv[]) {
@@ -52,25 +57,33 @@ void initTalkArgs(int argc, char *argv[]) {
     destPortNum = atoi(argv[3]);
 }
 
-// void * runServer(void * arg) {
+void createServer(struct Server myServer) {
+    myServer = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
+}
 
-//     struct Server myServer = server_constructor(AF_INET, SOCK_DGRAM, 0, INADDR_ANY, myPortNum);
+void createClient(struct Client myClient) {
+    myClient = client_constructor();
+}
+
+void * runServer(void * arg) {
+
+    struct Server myServer = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
 
 
-//     return NULL;
-// }
+    return NULL;
+}
 
 // Using this function to test to see if basic s-talk works
 void setupAndReceiveMessage() {
-    // Setup my socket(will be server) to receive msg from peer
-    struct sockaddr_in sin;
-    memset(&sin, 0, sizeof(sin)); 
-    sin.sin_family = AF_INET;
-    sin.sin_port = htons(myPortNum); 
-    sin.sin_addr.s_addr = htonl(INADDR_ANY); // TODO: change this to the IP address of our computer
+    // // Setup my socket(will be server) to receive msg from peer
+    // struct sockaddr_in sin;
+    // memset(&sin, 0, sizeof(sin)); 
+    // sin.sin_family = AF_INET;
+    // sin.sin_port = htons(myPortNum); 
+    // sin.sin_addr.s_addr = htonl(INADDR_ANY); // TODO: change this to the IP address of our computer
 
-    int mySocketDescriptor = socket(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT);
-    bind(mySocketDescriptor, (struct sockaddr*) &sin, sizeof(sin));
+    // int mySocketDescriptor = socket(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT);
+    // bind(mySocketDescriptor, (struct sockaddr*) &sin, sizeof(sin));
 
     // Setup for getaddrinfo()
     struct addrinfo hints;

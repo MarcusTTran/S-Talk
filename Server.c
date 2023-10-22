@@ -4,11 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <netdb.h>
-#include <sys/types.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <unistd.h>
 
 #define PORT_LEN 10
 
@@ -34,13 +29,13 @@ struct Server server_constructor(int domain, int service, int protocol, int port
     sprintf(portStr, "%d", port); 
 
     struct addrinfo* addrInfoResults;
-    int addrInfoResults = getaddrinfo(NULL, portStr, &hints, &addrInfoResults);
-    if (addrInfoResults != 0) {
+    int result = getaddrinfo(NULL, portStr, &hints, &addrInfoResults);
+    if (result != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(addrInfoResults));
         exit(EXIT_FAILURE);
     }
-    server.interface = (struct sockaddr_in*)addrInfoResults->ai_addr;
-    server.address.sin_addr.s_addr = server.interface; 
+    server.interface = ((struct sockaddr_in*)addrInfoResults->ai_addr)->sin_addr.s_addr;
+    server.address = *(struct sockaddr_in*)addrInfoResults->ai_addr; 
 
     // Create socket with the obtained info
     server.socket = socket(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT);

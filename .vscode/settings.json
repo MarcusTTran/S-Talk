@@ -58,6 +58,9 @@
   "C_Cpp_Runner.msvcSecureNoWarnings": false,
   "C_Cpp.default.compilerPath": "/usr/bin/gcc",
   "files.associations": {
-    "stdlib.h": "c"
+    "stdlib.h": "c",
+    "string.h": "c",
+    "list.h": "c",
+    "pthread.h": "c"
   }
 }

@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/mnt/c/cmpt300/S-talk",
-      "program": "/mnt/c/cmpt300/S-talk/build/Debug/outDebug",
+      "cwd": "/mnt/c/cmpt300/s-talk",
+      "program": "/mnt/c/cmpt300/s-talk/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
