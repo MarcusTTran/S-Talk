@@ -1,10 +1,10 @@
 all : s-talk
 
 s-talk: client.o server.o list.o input.o output.o main.o
-	gcc -g -pthread -pedantic -Wall -Werror -o s-talk main.o list.o client.o server.o
+	gcc -g -pedantic -Wall -Werror -o s-talk -pthread main.o list.o client.o server.o
 
 main.o: main.c 
-	gcc -g -pthread -pedantic -Wall -Werror -c main.c
+	gcc -g -pedantic -Wall -Werror -c main.c
 
 client.o: Client.c
 	gcc -g -pedantic -Wall -Werror -c Client.c -o client.o

@@ -21,8 +21,10 @@
 // Function headers
 void initTalkArgs(int argc, char *argv[]);
 // void * runServer(void * arg);
-void setupAndReceiveMessage();
+// void setupAndReceiveMessage();
 int replyToSender();
+// struct Server createServer();
+// struct Client createClient();
 
 // Will hold the args from command line
 int myPortNum, destPortNum;
@@ -34,16 +36,16 @@ struct Client clientTx;
 
 
 
-
 int main(int argc, char *argv[]) {
-    struct Server serverRx;
-    struct Client clientTx;
+    struct Server serverRx = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
+    struct Client clientTx = client_constructor(AF_INET, SOCK_DGRAM, myPortNum, destName);
     initTalkArgs(argc, argv);
     createServer(serverRx);
     createClient(clientTx);
-//    pthread_t server_thread;
-//    pthread_create(server_thread, NULL, runServer, NULL);
-    
+
+   pthread_t server_thread;
+   pthread_create(&server_thread, NULL, runServer, NULL);
+
 }
 
 void initTalkArgs(int argc, char *argv[]) {
@@ -57,18 +59,16 @@ void initTalkArgs(int argc, char *argv[]) {
     destPortNum = atoi(argv[3]);
 }
 
-void createServer(struct Server myServer) {
-    myServer = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
-}
+// struct Server createServer() {
+//     return server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
+// }
 
-void createClient(struct Client myClient) {
-    myClient = client_constructor();
-}
+// struct Client createClient() {
+//     return client_constructor(AF_INET, SOCK_DGRAM, destPortNum, destName);
+// }
 
 void * runServer(void * arg) {
-
-    struct Server myServer = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
-
+    
 
     return NULL;
 }
@@ -86,22 +86,23 @@ void setupAndReceiveMessage() {
     // bind(mySocketDescriptor, (struct sockaddr*) &sin, sizeof(sin));
 
     // Setup for getaddrinfo()
-    struct addrinfo hints;
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
+    // struct addrinfo hints;
+    // memset(&hints, 0, sizeof(hints));
+    // hints.ai_family = AF_INET;
+    // hints.ai_socktype = SOCK_DGRAM;
     
-    struct addrinfo* destInfoResults;
-    char portStr[10];
-    sprintf(portStr, "%d", destPortNum); // get the destination port number in a string
+    // struct addrinfo* destInfoResults;
+    // char portStr[10];
+    // sprintf(portStr, "%d", destPortNum); // get the destination port number in a string
 
-    int statusOfAddrInfo = getaddrinfo(destName, portStr, &hints, &destInfoResults);
-    if (statusOfAddrInfo != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(statusOfAddrInfo));
-        exit(EXIT_FAILURE);
-    }
+    // int statusOfAddrInfo = getaddrinfo(destName, portStr, &hints, &destInfoResults);
+    // if (statusOfAddrInfo != 0) {
+    //     fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(statusOfAddrInfo));
+    //     exit(EXIT_FAILURE);
+    // }
 
-    struct sockaddr_in * sinRemote = (struct sockaddr_in*)destInfoResults->ai_addr;
+    // struct sockaddr_in * sinRemote = (struct sockaddr_in*)destInfoResults->ai_addr;
+    
     unsigned int sinRemote_len = sizeof(struct sockaddr_in);
    
     // Receive message (like a server)
