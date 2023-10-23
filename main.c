@@ -139,8 +139,8 @@ void setupAndReceiveMessage() {
         struct sockaddr_in * sinRemote = (struct sockaddr_in*)destInfoResults->ai_addr;
         unsigned int sinRemote_len = sizeof(struct sockaddr_in);
     
-        char str1[sizeof(sin)];
-        char str2[sinRemote_len];
+        char str1[INET_ADDRSTRLEN];
+        char str2[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &(sin.sin_addr), str1, INET_ADDRSTRLEN);
         inet_ntop(AF_INET, &(sinRemote->sin_addr), str2, INET_ADDRSTRLEN);
         printf("our socket address: %s\n", str1);
