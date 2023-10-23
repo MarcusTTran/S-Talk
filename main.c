@@ -46,18 +46,22 @@ void* testThreads(void* arg)
 
 int main(int argc, char *argv[]) {
     printf("Starting...\n");
+    initTalkArgs(argc, argv);
 
     pthread_t threadPID;
     pthread_create(&threadPID, NULL, testThreads, "123\n");
 
-    printf("Enter '!' to kill the thread\n");
-    char x;
-    scanf("%c", &x);
-    if()
+    // printf("Enter '!' to kill the thread\n");
+    // char x;
+    // scanf("%c", &x);
+
     // pthread_t threadPID2;
     // pthread_create(&threadPID2, NULL, testThreads, "321\n");
 
     pthread_join(threadPID, NULL);
+    
+    setupAndReceiveMessage();
+
     // pthread_join(threadPID2, NULL);
     // testThreads(NULL);
     // struct Server serverRx;
@@ -80,6 +84,10 @@ void initTalkArgs(int argc, char *argv[]) {
         exit(0);
     }
     destPortNum = atoi(argv[3]);
+
+    printf("    our port: %d\n", myPortNum);
+    printf("    destintion address: %s\n", destName);
+    printf("    destination port: %d\n\n", destPortNum);
 }
 
 // void createServer(struct Server myServer) {
@@ -131,6 +139,16 @@ void setupAndReceiveMessage() {
         struct sockaddr_in * sinRemote = (struct sockaddr_in*)destInfoResults->ai_addr;
         unsigned int sinRemote_len = sizeof(struct sockaddr_in);
     
+        char str1[sizeof(sin)];
+        char str2[sinRemote_len];
+        inet_ntop(AF_INET, &(sin.sin_addr), str1, INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, &(sinRemote->sin_addr), str2, INET_ADDRSTRLEN);
+        printf("our socket address: %s\n", str1);
+        printf("our socket port: %d\n", ntohs(sin.sin_port));
+        printf("destination socket address: %s\n", str2);
+        printf("destination socket port: %d\n", ntohs(sinRemote->sin_port));
+
+
         // Receive message (like a server)
         char messageRx[MSG_MAX_LENGTH];
         // Blocking call to wait for msg to be received
@@ -158,66 +176,66 @@ void setupAndReceiveMessage() {
     freeaddrinfo(destInfoResults);
 }   
 
-// void setupAndReceiveMessage() {
-//     // Setup my socket(will be server) to receive msg from peer
-//     struct sockaddr_in sin;
-//     memset(&sin, 0, sizeof(sin)); 
-//     sin.sin_family = AF_INET;
-//     sin.sin_port = htons(myPortNum); 
-//     sin.sin_addr.s_addr = htonl(INADDR_ANY); // TODO: change this to the IP address of our computer
+void setupAndReceiveMessage_DELETE_LATER() {
+    // Setup my socket(will be server) to receive msg from peer
+    struct sockaddr_in sin;
+    memset(&sin, 0, sizeof(sin)); 
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(myPortNum); 
+    sin.sin_addr.s_addr = htonl(INADDR_ANY); // TODO: change this to the IP address of our computer
 
-//     int mySocketDescriptor = socket(PF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT);
-//     bind(mySocketDescriptor, (struct sockaddr*) &sin, sizeof(sin));
+    int mySocketDescriptor = socket(PF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT);
+    bind(mySocketDescriptor, (struct sockaddr*) &sin, sizeof(sin));
 
-//     // // Setup for getaddrinfo()
-//     // struct addrinfo hints;
-//     // memset(&hints, 0, sizeof(hints));
-//     // hints.ai_family = AF_INET;
-//     // hints.ai_socktype = SOCK_DGRAM;
+    // // Setup for getaddrinfo()
+    // struct addrinfo hints;
+    // memset(&hints, 0, sizeof(hints));
+    // hints.ai_family = AF_INET;
+    // hints.ai_socktype = SOCK_DGRAM;
     
-//     while(1){
-//         // struct addrinfo* destInfoResults;
-//         // char portStr[10];
-//         // sprintf(portStr, "%d", destPortNum); // get the destination port number in a string
+    while(1){
+        // struct addrinfo* destInfoResults;
+        // char portStr[10];
+        // sprintf(portStr, "%d", destPortNum); // get the destination port number in a string
 
-//         // int statusOfAddrInfo = getaddrinfo(destName, portStr, &hints, &destInfoResults);
-//         // if (statusOfAddrInfo != 0) {
-//         //     fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(statusOfAddrInfo));
-//         //     exit(EXIT_FAILURE);
-//         // }
+        // int statusOfAddrInfo = getaddrinfo(destName, portStr, &hints, &destInfoResults);
+        // if (statusOfAddrInfo != 0) {
+        //     fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(statusOfAddrInfo));
+        //     exit(EXIT_FAILURE);
+        // }
 
-//         // struct sockaddr_in * sinRemote = (struct sockaddr_in*)destInfoResults->ai_addr;
-//         // unsigned int sinRemote_len = sizeof(struct sockaddr_in);
+        // struct sockaddr_in * sinRemote = (struct sockaddr_in*)destInfoResults->ai_addr;
+        // unsigned int sinRemote_len = sizeof(struct sockaddr_in);
         
-//         struct sockaddr_in sinRemote;
-//         unsigned int sinRemote_len = sizeof(sinRemote);
+        struct sockaddr_in sinRemote;
+        unsigned int sinRemote_len = sizeof(sinRemote);
         
-//         // Receive message (like a server)
-//         char messageRx[MSG_MAX_LENGTH];
-//         // Blocking call to wait for msg to be received
-//         int bytesRx = recvfrom(mySocketDescriptor, messageRx, MSG_MAX_LENGTH, 0,
-//                         (struct sockaddr*) &sinRemote, &sinRemote_len); 
-//         // if (bytesRx == -1) { 
-//         //     printf("Error in receiving message! Exiting program");
-//         //     close(mySocketDescriptor);
-//         //     freeaddrinfo(destInfoResults);
-//         //     exit(0); 
-//         // }
-//         // Ensure it is a null terminated string
-//         int terminateMessageIndex = (bytesRx < MSG_MAX_LENGTH) ? bytesRx : MSG_MAX_LENGTH - 1;
-//         messageRx[terminateMessageIndex] = 0;
-//         // Print it out to console
-//         printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx);
+        // Receive message (like a server)
+        char messageRx[MSG_MAX_LENGTH];
+        // Blocking call to wait for msg to be received
+        int bytesRx = recvfrom(mySocketDescriptor, messageRx, MSG_MAX_LENGTH, 0,
+                        (struct sockaddr*) &sinRemote, &sinRemote_len); 
+        // if (bytesRx == -1) { 
+        //     printf("Error in receiving message! Exiting program");
+        //     close(mySocketDescriptor);
+        //     freeaddrinfo(destInfoResults);
+        //     exit(0); 
+        // }
+        // Ensure it is a null terminated string
+        int terminateMessageIndex = (bytesRx < MSG_MAX_LENGTH) ? bytesRx : MSG_MAX_LENGTH - 1;
+        messageRx[terminateMessageIndex] = 0;
+        // Print it out to console
+        printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx);
 
-//         // Send a message back (Reply)
-//         char replyTx[MSG_MAX_LENGTH] = "Your message was received!\n";
-//         // sprintf(replyTx, "Your message was received: \n(%s)\n", messageRx);
-//         // int replyResult = replyToSender(replyTx, mySocketDescriptor, sinRemote);
-//         replyToSender(replyTx, mySocketDescriptor, &sinRemote);
-//     }  
-//     close(mySocketDescriptor);
-//     // freeaddrinfo(destInfoResults);
-// }  
+        // Send a message back (Reply)
+        char replyTx[MSG_MAX_LENGTH] = "Your message was received!\n";
+        // sprintf(replyTx, "Your message was received: \n(%s)\n", messageRx);
+        // int replyResult = replyToSender(replyTx, mySocketDescriptor, sinRemote);
+        replyToSender(replyTx, mySocketDescriptor, &sinRemote);
+    }  
+    close(mySocketDescriptor);
+    // freeaddrinfo(destInfoResults);
+}  
 
 // Sends a reply in the form of a char[] to a sender name sinRemote using a user-specified socket
 int replyToSender(const char message[], int mySocket, struct sockaddr_in * sinRemote) { 
