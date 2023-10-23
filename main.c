@@ -16,13 +16,14 @@
 #define PORT 6969
 #define REMOTE_NAME_BUFFER 25 
 // #define MSG_MAX_LENGTH 256
-#define FLAGS_DEFAULT 0
+
 
 // Function headers
 void initTalkArgs(int argc, char *argv[]);
 void * runServer(void * arg);
 // void setupAndReceiveMessage();
 int replyToSender();
+void terminateProgram();
 
 // Will hold the args from command line
 int myPortNum, destPortNum;
@@ -33,16 +34,13 @@ struct Server serverRx;
 struct Client clientTx;
 
 
-
 int main(int argc, char *argv[]) {
-    serverRx = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
-    clientTx = client_constructor(AF_INET, SOCK_DGRAM, myPortNum, destName);
     initTalkArgs(argc, argv);
-    createServer(serverRx);
-    createClient(clientTx);
+    serverRx = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
+    clientTx = client_constructor(AF_INET, SOCK_DGRAM, myPortNum, destName, destPortNum);
 
-   pthread_t server_thread;
-   pthread_create(&server_thread, NULL, runServer, NULL);
+    pthread_t server_thread;
+    pthread_create(&server_thread, NULL, runServer, NULL);
 
 }
 
@@ -58,10 +56,32 @@ void initTalkArgs(int argc, char *argv[]) {
 }
 
 
-
 void * runServer(void * arg) {
+    u_long sinRemoteLen = sizeof(clientTx.sendToAddr);
+    char messageRx[MSG_MAX_LENGTH];
+    int bytesRx = 0;
+    int terminateMessageIndex = 0;
+    // Wait and receive message from remote connection through user specified port
+    while(1) {
+         bytesRx = recvfrom(serverRx.socket, messageRx, MSG_MAX_LENGTH, FLAGS_DEFAULT, 
+                    (struct sockaddr*) &clientTx.sendToAddr, &sinRemoteLen);
+        if (bytesRx == -1) { 
+            printf("Error in receiving message!\n");
+            terminateProgram(serverRx, clientTx);
+        }
+        // ensure string is null terminated
+        terminateMessageIndex = (bytesRx < MSG_MAX_LENGTH) ? bytesRx : MSG_MAX_LENGTH - 1;
+        messageRx[terminateMessageIndex] = 0;
+        // Print it out to console
+        printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx);
+        // TODO: add it to a shared list
+    }
     
+    return NULL;
+}
 
+void * runClient(void * arg) {
+    
     return NULL;
 }
 
@@ -72,7 +92,7 @@ void setupAndReceiveMessage() {
     // memset(&sin, 0, sizeof(sin)); 
     // sin.sin_family = AF_INET;
     // sin.sin_port = htons(myPortNum); 
-    // sin.sin_addr.s_addr = htonl(INADDR_ANY); // TODO: change this to the IP address of our computer
+    // sin.sin_addr.s_addr = htonl(INADDR_ANY); 
 
     // int mySocketDescriptor = socket(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT);
     // bind(mySocketDescriptor, (struct sockaddr*) &sin, sizeof(sin));
@@ -95,24 +115,22 @@ void setupAndReceiveMessage() {
 
     // struct sockaddr_in * sinRemote = (struct sockaddr_in*)destInfoResults->ai_addr;
     
-    unsigned int sinRemote_len = sizeof(struct sockaddr_in);
+    // unsigned int sinRemote_len = sizeof(struct sockaddr_in);
    
     // Receive message (like a server)
-    char messageRx[MSG_MAX_LENGTH];
-    // Blocking call to wait for msg to be received
-    int bytesRx = recvfrom(mySocketDescriptor, messageRx, MSG_MAX_LENGTH, 0,
-                    (struct sockaddr*) &sinRemote, &sinRemote_len); 
-    if (bytesRx == -1) { 
-        printf("Error in receiving message! Exiting program");
-        close(mySocketDescriptor);
-        freeaddrinfo(destInfoResults);
-        exit(0); 
-    }
-    // Ensure it is a null terminated string
-    int terminateMessageIndex = (bytesRx < MSG_MAX_LENGTH) ? bytesRx : MSG_MAX_LENGTH - 1;
-    messageRx[terminateMessageIndex] = 0;
-    // Print it out to console
-    printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx);
+    // char messageRx[MSG_MAX_LENGTH];
+    // // Blocking call to wait for msg to be received
+    // int bytesRx = recvfrom(mySocketDescriptor, messageRx, MSG_MAX_LENGTH, 0,
+    //                 (struct sockaddr*) &sinRemote, &sinRemote_len); 
+    // if (bytesRx == -1) { 
+    //     printf("Error in receiving message! Exiting program");
+    //     terminateMessageIndex(serverRx, clientTx);
+    // }
+    // // Ensure it is a null terminated string
+    // int terminateMessageIndex = (bytesRx < MSG_MAX_LENGTH) ? bytesRx : MSG_MAX_LENGTH - 1;
+    // messageRx[terminateMessageIndex] = 0;
+    // // Print it out to console
+    // printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx);
 
     // Send a message back (Reply)
     char replyTx[MSG_MAX_LENGTH] = "Your message was received!\n";
@@ -134,5 +152,13 @@ int replyToSender(const char message[], int mySocket, struct sockaddr_in * sinRe
         return -1;
     }
     return 0;
+}
+
+// In the case of a major bug or error, call this to close free structs and 
+// terminate the program
+void terminateProgram(struct Server server, struct Client client) {
+    closeClient(client);
+    closeServer(server);
+    exit(EXIT_FAILURE);
 }
 

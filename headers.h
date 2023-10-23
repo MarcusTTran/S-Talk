@@ -13,5 +13,6 @@
 typedef unsigned long u_long;
 
 #define PROTOCOL_DEFAULT 0
-
+#define FLAGS_DEFAULT 0
+#define MSG_MAX_LENGTH 256
 
