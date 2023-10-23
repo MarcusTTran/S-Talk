@@ -20,11 +20,9 @@
 
 // Function headers
 void initTalkArgs(int argc, char *argv[]);
-// void * runServer(void * arg);
+void * runServer(void * arg);
 // void setupAndReceiveMessage();
 int replyToSender();
-// struct Server createServer();
-// struct Client createClient();
 
 // Will hold the args from command line
 int myPortNum, destPortNum;
@@ -37,8 +35,8 @@ struct Client clientTx;
 
 
 int main(int argc, char *argv[]) {
-    struct Server serverRx = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
-    struct Client clientTx = client_constructor(AF_INET, SOCK_DGRAM, myPortNum, destName);
+    serverRx = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
+    clientTx = client_constructor(AF_INET, SOCK_DGRAM, myPortNum, destName);
     initTalkArgs(argc, argv);
     createServer(serverRx);
     createClient(clientTx);
@@ -59,13 +57,7 @@ void initTalkArgs(int argc, char *argv[]) {
     destPortNum = atoi(argv[3]);
 }
 
-// struct Server createServer() {
-//     return server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
-// }
 
-// struct Client createClient() {
-//     return client_constructor(AF_INET, SOCK_DGRAM, destPortNum, destName);
-// }
 
 void * runServer(void * arg) {
     
