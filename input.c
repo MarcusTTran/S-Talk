@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define MSG_MAX_LENGTH 256
+#include "headers.h"
 
 // Returns a pointer to 
 char * userInputMsg() {

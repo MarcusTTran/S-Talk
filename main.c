@@ -16,13 +16,14 @@
 #define PORT 6969
 #define REMOTE_NAME_BUFFER 25 
 // #define MSG_MAX_LENGTH 256
-#define FLAGS_DEFAULT 0
+
 
 // Function headers
 void initTalkArgs(int argc, char *argv[]);
-// void * runServer(void * arg);
-void setupAndReceiveMessage();
+void * runServer(void * arg);
+// void setupAndReceiveMessage();
 int replyToSender();
+void terminateProgram();
 
 // Will hold the args from command line
 int myPortNum, destPortNum;
@@ -47,32 +48,39 @@ void* testThreads(void* arg)
 int main(int argc, char *argv[]) {
     printf("Starting...\n");
     initTalkArgs(argc, argv);
+//     pthread_t threadPID;
+//     pthread_create(&threadPID, NULL, testThreads, "123\n");
 
-    pthread_t threadPID;
-    pthread_create(&threadPID, NULL, testThreads, "123\n");
+//     // printf("Enter '!' to kill the thread\n");
+//     // char x;
+//     // scanf("%c", &x);
 
-    // printf("Enter '!' to kill the thread\n");
-    // char x;
-    // scanf("%c", &x);
+//     // pthread_t threadPID2;
+//     // pthread_create(&threadPID2, NULL, testThreads, "321\n");
 
-    // pthread_t threadPID2;
-    // pthread_create(&threadPID2, NULL, testThreads, "321\n");
-
-    pthread_join(threadPID, NULL);
+//     pthread_join(threadPID, NULL);
     
-    setupAndReceiveMessage();
+//     setupAndReceiveMessage();
 
-    // pthread_join(threadPID2, NULL);
-    // testThreads(NULL);
-    // struct Server serverRx;
-    // struct Client clientTx;
-    // initTalkArgs(argc, argv);
-    // createServer(serverRx);
-    // createClient(clientTx);
-//    pthread_t server_thread;
-//    pthread_create(server_thread, NULL, runServer, NULL);
-    printf("---DONE---\n");
-    return 0;
+//     // pthread_join(threadPID2, NULL);
+//     // testThreads(NULL);
+//     // struct Server serverRx;
+//     // struct Client clientTx;
+//     // initTalkArgs(argc, argv);
+//     // createServer(serverRx);
+//     // createClient(clientTx);
+// //    pthread_t server_thread;
+// //    pthread_create(server_thread, NULL, runServer, NULL);
+
+    
+    serverRx = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
+    clientTx = client_constructor(AF_INET, SOCK_DGRAM, myPortNum, destName, destPortNum);
+
+    pthread_t server_thread;
+    pthread_create(&server_thread, NULL, runServer, NULL);
+
+    // printf("---DONE---\n");
+    // return 0;
 }
 
 void initTalkArgs(int argc, char *argv[]) {
@@ -90,21 +98,35 @@ void initTalkArgs(int argc, char *argv[]) {
     printf("    destination port: %d\n\n", destPortNum);
 }
 
-// void createServer(struct Server myServer) {
-//     myServer = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
-// }
 
-// void createClient(struct Client myClient) {
-//     myClient = client_constructor();
-// }
+void * runServer(void * arg) {
+    u_long sinRemoteLen = sizeof(clientTx.sendToAddr);
+    char messageRx[MSG_MAX_LENGTH];
+    int bytesRx = 0;
+    int terminateMessageIndex = 0;
+    // Wait and receive message from remote connection through user specified port
+    while(1) {
+         bytesRx = recvfrom(serverRx.socket, messageRx, MSG_MAX_LENGTH, FLAGS_DEFAULT, 
+                    (struct sockaddr*) &clientTx.sendToAddr, &sinRemoteLen);
+        if (bytesRx == -1) { 
+            printf("Error in receiving message!\n");
+            terminateProgram(serverRx, clientTx);
+        }
+        // ensure string is null terminated
+        terminateMessageIndex = (bytesRx < MSG_MAX_LENGTH) ? bytesRx : MSG_MAX_LENGTH - 1;
+        messageRx[terminateMessageIndex] = 0;
+        // Print it out to console
+        printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx);
+        // TODO: add it to a shared list
+    }
+    
+    return NULL;
+}
 
-// void * runClient(char * request) {
-
-//     // struct Server myServer = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
-//     struct Client myClient = client_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
-
-//     return NULL;
-// }
+void * runClient(void * arg) {
+    
+    return NULL;
+}
 
 // Using this function to test to see if basic s-talk works
 void setupAndReceiveMessage() {
@@ -119,20 +141,20 @@ void setupAndReceiveMessage() {
     bind(mySocketDescriptor, (struct sockaddr*) &sin, sizeof(sin));
 
     // Setup for getaddrinfo()
-    struct addrinfo hints;
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
+    // struct addrinfo hints;
+    // memset(&hints, 0, sizeof(hints));
+    // hints.ai_family = AF_INET;
+    // hints.ai_socktype = SOCK_DGRAM;
     
-    struct addrinfo* destInfoResults;
-    char portStr[10];
-    sprintf(portStr, "%d", destPortNum); // get the destination port number in a string
+    // struct addrinfo* destInfoResults;
+    // char portStr[10];
+    // sprintf(portStr, "%d", destPortNum); // get the destination port number in a string
 
-    int statusOfAddrInfo = getaddrinfo(destName, portStr, &hints, &destInfoResults);
-    if (statusOfAddrInfo != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(statusOfAddrInfo));
-        exit(EXIT_FAILURE);
-    }
+    // int statusOfAddrInfo = getaddrinfo(destName, portStr, &hints, &destInfoResults);
+    // if (statusOfAddrInfo != 0) {
+    //     fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(statusOfAddrInfo));
+    //     exit(EXIT_FAILURE);
+    // }
 
     while(1)
     {
@@ -247,5 +269,13 @@ int replyToSender(const char message[], int mySocket, struct sockaddr_in * sinRe
         return -1;
     }
     return 0;
+}
+
+// In the case of a major bug or error, call this to close free structs and 
+// terminate the program
+void terminateProgram(struct Server server, struct Client client) {
+    closeClient(client);
+    closeServer(server);
+    exit(EXIT_FAILURE);
 }
 
