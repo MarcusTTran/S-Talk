@@ -22,8 +22,8 @@ struct Client client_constructor(int domain, int service, int port, char* hostNa
 
 
 
-    client.interface
-    client.address
+    // client.interface
+    // client.address
     
-
+    return client;
 }

@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pthread.h>
+
 
 #define PORT_LEN 10
 
@@ -31,7 +33,7 @@ struct Server server_constructor(int domain, int service, int protocol, int port
     struct addrinfo* addrInfoResults;
     int result = getaddrinfo(NULL, portStr, &hints, &addrInfoResults);
     if (result != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(addrInfoResults));
+        // fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(addrInfoResults));
         exit(EXIT_FAILURE);
     }
     server.interface = ((struct sockaddr_in*)addrInfoResults->ai_addr)->sin_addr.s_addr;
