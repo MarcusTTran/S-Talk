@@ -38,9 +38,10 @@ int main(int argc, char *argv[]) {
     initTalkArgs(argc, argv);
     serverRx = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
     clientTx = client_constructor(AF_INET, SOCK_DGRAM, myPortNum, destName, destPortNum);
-
+    List * pListRx = List_create(); // for incoming messages and output thread
+    List * pListTx = List_create(); // for outgoing messages and input thread
     pthread_t server_thread;
-    pthread_create(&server_thread, NULL, runServer, NULL);
+    assert(pthread_create(&server_thread, NULL, runServer, NULL) == 0);
 
 }
 
@@ -56,7 +57,8 @@ void initTalkArgs(int argc, char *argv[]) {
 }
 
 
-void * runServer(void * arg) {
+void * runServer(void * pListAsVoid) {
+    List * plistRx = (List*)pListAsVoid;
     u_long sinRemoteLen = sizeof(clientTx.sendToAddr);
     char messageRx[MSG_MAX_LENGTH];
     int bytesRx = 0;
@@ -74,7 +76,15 @@ void * runServer(void * arg) {
         messageRx[terminateMessageIndex] = 0;
         // Print it out to console
         printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx);
-        // TODO: add it to a shared list
+        // add it to a shared list IF there is space on it. Don't forget to free lists at the end
+        char * newMessage = (char*)malloc(strlen(messageRx) + 1);
+        strcpy(newMessage, messageRx);
+        void * newMessageVoid = (void*)newMessage;
+        int result = -1;
+        while (result == -1) { // TODO: may need to figure out a better way than this
+            result = List_append(plistRx, newMessageVoid);
+        }
+        // TODO: this will be a producer in the producer consumer problem, so semaphores?
     }
     
     return NULL;
@@ -154,11 +164,20 @@ int replyToSender(const char message[], int mySocket, struct sockaddr_in * sinRe
     return 0;
 }
 
+
+// FREE_FN for List implementation
+void freeItem(void * pItem) {
+    free(pItem);
+    pItem = NULL;
+}
+
 // In the case of a major bug or error, call this to close free structs and 
-// terminate the program
-void terminateProgram(struct Server server, struct Client client) {
+// terminate the program. Additionally, can call this at the end to free structs
+void terminateProgram(struct Server server, struct Client client, List * pList1, List * pList2) {
     closeClient(client);
     closeServer(server);
+    List_free(pList1, freeItem);
+    List_free(pList2, freeItem);
     exit(EXIT_FAILURE);
 }
 
