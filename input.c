@@ -10,10 +10,11 @@ char * userInputMsg() {
     char msgRequest[MSG_MAX_LENGTH];
     memset(msgRequest, 0, MSG_MAX_LENGTH);
 
-    while (1) {
-        fgets(msgRequest, MSG_MAX_LENGTH, stdin);
-        
-    }
+    // while (1) {
+        fgets(msgRequest, sizeof(msgRequest), stdin);
+
+    // }
     char * msgPtr = (char*)&msgRequest;
     return msgPtr;
 }
+

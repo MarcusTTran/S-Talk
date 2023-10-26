@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 // My own files includes
 #include "list.h"
@@ -59,7 +60,7 @@ void initTalkArgs(int argc, char *argv[]) {
 
 void * runServer(void * pListAsVoid) {
     List * plistRx = (List*)pListAsVoid;
-    u_long sinRemoteLen = sizeof(clientTx.sendToAddr);
+    socklen_t sinRemoteLen = sizeof(clientTx.sendToAddr);
     char messageRx[MSG_MAX_LENGTH];
     int bytesRx = 0;
     int terminateMessageIndex = 0;
@@ -91,7 +92,13 @@ void * runServer(void * pListAsVoid) {
 }
 
 void * runClient(void * arg) {
-    
+    char* messageTx = userInputMsg(); // TODO: function that gets response from keyboard
+    if(fgets(messageTx, sizeof(messageTx), stdin) != NULL) {
+        size_t msgLen = strlen(messageTx);
+        if (msgLen > 0 && messageTx[msgLen - 1] == '\n') {
+            messageTx[msgLen - 1] = '\0'; // null-terminate the string
+        }
+    }
     return NULL;
 }
 
