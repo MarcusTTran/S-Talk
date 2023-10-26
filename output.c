@@ -4,3 +4,6 @@
 
 #include "headers.h"
 
+void printMessage(const char* msgReceived) {
+    
+}

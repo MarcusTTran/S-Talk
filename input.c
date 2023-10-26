@@ -4,17 +4,24 @@
 #include <stdlib.h>
 #include <string.h>
 #include "headers.h"
+#include <pthread.h>
+#include "list.h"
 
-// Returns a pointer to 
-char * userInputMsg() {
+// Dynamically allocates a string from user input and returns a pointer to it
+// - String will be null terminated
+// - Will not have an endline at the end 
+char * userInputMsg(List * pList, pthread_mutex_t mutex) {
     char msgRequest[MSG_MAX_LENGTH];
     memset(msgRequest, 0, MSG_MAX_LENGTH);
-
-    // while (1) {
-        fgets(msgRequest, sizeof(msgRequest), stdin);
-
-    // }
-    char * msgPtr = (char*)&msgRequest;
+    fgets(msgRequest, sizeof(msgRequest), stdin);
+    // null-terminate the string
+    size_t msgLen = strlen(msgRequest);
+    if (msgLen > 0 && msgRequest[msgLen - 1] == '\n') {
+        msgRequest[msgLen - 1] = '\0'; 
+    }
+    // send it as a pointer
+    char * msgPtr = (char*)malloc(strlen(msgRequest) + 1);
+    strcpy(msgPtr, msgRequest);
     return msgPtr;
 }
 
