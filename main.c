@@ -74,7 +74,19 @@ int main(int argc, char *argv[]) {
 
     
     serverRx = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
+    
+    char str1[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(serverRx.address), str1, INET_ADDRSTRLEN);
+    printf("our socket address: %s\n", str1);
+    printf("our socket port: %d\n", ntohs(serverRx.port));
+    
     clientTx = client_constructor(AF_INET, SOCK_DGRAM, myPortNum, destName, destPortNum);
+
+    
+    char str2[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(clientTx.address), str2, INET_ADDRSTRLEN);
+    printf("destination socket address: %s\n", str2);
+    printf("destination socket port: %d\n", ntohs(clientTx.port));
 
     pthread_t server_thread;
     pthread_create(&server_thread, NULL, runServer, NULL);
@@ -100,7 +112,7 @@ void initTalkArgs(int argc, char *argv[]) {
 
 
 void * runServer(void * arg) {
-    u_long sinRemoteLen = sizeof(clientTx.sendToAddr);
+    u_int sinRemoteLen = sizeof(clientTx.sendToAddr);
     char messageRx[MSG_MAX_LENGTH];
     int bytesRx = 0;
     int terminateMessageIndex = 0;
@@ -112,6 +124,17 @@ void * runServer(void * arg) {
             printf("Error in receiving message!\n");
             terminateProgram(serverRx, clientTx);
         }
+
+        // char str1[INET_ADDRSTRLEN];
+        // char str2[INET_ADDRSTRLEN];
+        // inet_ntop(AF_INET, &(serverRx.address), str1, INET_ADDRSTRLEN);
+        // inet_ntop(AF_INET, &(clientTx.address), str2, INET_ADDRSTRLEN);
+        // printf("our socket address: %s\n", str1);
+        // printf("our socket port: %d\n", ntohs(serverRx.port));
+        // printf("destination socket address: %s\n", str2);
+        // printf("destination socket port: %d\n", ntohs(clientTx.port));
+
+        
         // ensure string is null terminated
         terminateMessageIndex = (bytesRx < MSG_MAX_LENGTH) ? bytesRx : MSG_MAX_LENGTH - 1;
         messageRx[terminateMessageIndex] = 0;
@@ -141,20 +164,20 @@ void setupAndReceiveMessage() {
     bind(mySocketDescriptor, (struct sockaddr*) &sin, sizeof(sin));
 
     // Setup for getaddrinfo()
-    // struct addrinfo hints;
-    // memset(&hints, 0, sizeof(hints));
-    // hints.ai_family = AF_INET;
-    // hints.ai_socktype = SOCK_DGRAM;
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
     
-    // struct addrinfo* destInfoResults;
-    // char portStr[10];
-    // sprintf(portStr, "%d", destPortNum); // get the destination port number in a string
+    struct addrinfo* destInfoResults;
+    char portStr[10];
+    sprintf(portStr, "%d", destPortNum); // get the destination port number in a string
 
-    // int statusOfAddrInfo = getaddrinfo(destName, portStr, &hints, &destInfoResults);
-    // if (statusOfAddrInfo != 0) {
-    //     fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(statusOfAddrInfo));
-    //     exit(EXIT_FAILURE);
-    // }
+    int statusOfAddrInfo = getaddrinfo(destName, portStr, &hints, &destInfoResults);
+    if (statusOfAddrInfo != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(statusOfAddrInfo));
+        exit(EXIT_FAILURE);
+    }
 
     while(1)
     {
