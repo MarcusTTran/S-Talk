@@ -40,9 +40,10 @@ List * pListTx;
 struct Server serverRx;
 struct Client clientTx;
 // pthread_cond_t addOkToListRxCondVar = PTHREAD_COND_INITIALIZER;  Not sure if needed
-static pthread_mutex_t addOkToListRxMutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t addOkToListTxCondVar = PTHREAD_COND_INITIALIZER;
-static pthread_mutex_t addOkToListTxMutex = PTHREAD_MUTEX_INITIALIZER;
+// TODO: change naming since addOk might not be very true to what it is doing
+static pthread_mutex_t modifyListRxMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t removeOkToListTxCondVar = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t modifyListTxMutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 int main(int argc, char *argv[]) {
@@ -64,6 +65,13 @@ int main(int argc, char *argv[]) {
     pthread_join(&server_thread, NULL);
     pthread_join(&print_thread, NULL);
     // TODO: join the next two threads
+
+    pthread_mutex_destroy(&modifyListRxMutex);
+    pthread_mutex_destroy(&modifyListTxMutex);
+    pthread_cond_destroy(&removeOkToListTxCondVar);
+    
+
+
 }
 
 void initTalkArgs(int argc, char *argv[]) {
@@ -103,12 +111,12 @@ void * runServer(void * pListAsVoid) {
         void * newMessageVoid = (void*)newMessage;
         
         // TODO: Add maybe cond here (P call)
-        pthread_mutex_lock(&addOkToListRxMutex);
+        pthread_mutex_lock(&modifyListRxMutex);
         if (List_append(pList, newMessageVoid) == -1) {
             printf("Error: List did not have enough nodes!\n");
         }
         // TODO: Add maybe cond here (V call)
-        pthread_mutex_unlock(&addOkToListRxMutex);
+        pthread_mutex_unlock(&modifyListRxMutex);
     }
     
     return NULL;
@@ -121,16 +129,33 @@ void * printIncomingMsg(void * arg) {
 }
 
 void * getUserMessages(void * arg) {
-    return NULL;
+    bool userDone = false;
+
+    while(!userDone) {
+
+        // TODO: if user enters '!' then end program
+        // TODO: signal call for runCLient to remove item from list
+    }
 }
 
 // Thread which gets messages from user 
 void * runClient(void * arg) {
     char* messageTx;
 
-    while(1) {
-        messageTx =
-    }
+    pthread_mutex_lock(&modifyListTxMutex);
+    while(1) { 
+        while(List_count(pListTx) < 1) { // TODO: possibly revise this? Not sure yet
+            pthread_cond_wait(&removeOkToListTxCondVar, &modifyListTxMutex);
+        }
+        
+        if (List_first(pListTx) != NULL) {
+            messageTx = List_remove(pListTx);
+        }
+        List_first(pListRx); // set list back to first item
+        // DO MORE STUFF WITH THE NEW MESSAGE
+        // TODO: add signal?
+    }   
+    pthread_mutex_unlock(&modifyListTxMutex);
 
     return NULL;
 }
@@ -162,4 +187,5 @@ void terminateProgram(struct Server server, struct Client client, List * pList1,
     List_free(pList2, freeItem);
     exit(EXIT_FAILURE);
 }
+
 

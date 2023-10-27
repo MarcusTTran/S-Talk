@@ -10,7 +10,7 @@
 // Dynamically allocates a string from user input and returns a pointer to it
 // - String will be null terminated
 // - Will not have an endline at the end 
-char * userInputMsg(List * pList, pthread_mutex_t mutex) {
+char * userInputMsg(List * pList) {
     char msgRequest[MSG_MAX_LENGTH];
     memset(msgRequest, 0, MSG_MAX_LENGTH);
     fgets(msgRequest, sizeof(msgRequest), stdin);
