@@ -15,12 +15,13 @@
 // CSIL MACHINE IP: 127.0.0.1
 #define PORT 6969
 #define REMOTE_NAME_BUFFER 25 
-// #define MSG_MAX_LENGTH 256
+#define MSG_MAX_LENGTH 256
 
 
 // Function headers
 void initTalkArgs(int argc, char *argv[]);
 void * runServer(void * arg);
+void * runClient();
 // void setupAndReceiveMessage();
 int replyToSender();
 void terminateProgram();
@@ -72,6 +73,13 @@ int main(int argc, char *argv[]) {
 // //    pthread_t server_thread;
 // //    pthread_create(server_thread, NULL, runServer, NULL);
 
+       
+    clientTx = client_constructor(AF_INET, SOCK_DGRAM, myPortNum, destName, destPortNum);
+    
+    char str2[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(clientTx.sendToAddr), str2, INET_ADDRSTRLEN);
+    printf("destination socket address: %s\n", str2);
+    printf("destination socket port: %d\n", ntohs(clientTx.destPort));
     
     serverRx = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
     
@@ -80,19 +88,21 @@ int main(int argc, char *argv[]) {
     printf("our socket address: %s\n", str1);
     printf("our socket port: %d\n", ntohs(serverRx.port));
     
-    clientTx = client_constructor(AF_INET, SOCK_DGRAM, myPortNum, destName, destPortNum);
 
-    
-    char str2[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &(clientTx.address), str2, INET_ADDRSTRLEN);
-    printf("destination socket address: %s\n", str2);
-    printf("destination socket port: %d\n", ntohs(clientTx.port));
 
     pthread_t server_thread;
     pthread_create(&server_thread, NULL, runServer, NULL);
+    
 
-    // printf("---DONE---\n");
-    // return 0;
+    pthread_t client_thread;
+    pthread_create(&client_thread, NULL, runClient, NULL);
+    
+    pthread_join(server_thread, NULL);
+    pthread_join(client_thread, NULL);
+    // runClient();
+
+    printf("---DONE---\n");
+    return 0;
 }
 
 void initTalkArgs(int argc, char *argv[]) {
@@ -112,6 +122,7 @@ void initTalkArgs(int argc, char *argv[]) {
 
 
 void * runServer(void * arg) {
+    printf("Server is running ...\n");
     u_int sinRemoteLen = sizeof(clientTx.sendToAddr);
     char messageRx[MSG_MAX_LENGTH];
     int bytesRx = 0;
@@ -124,17 +135,6 @@ void * runServer(void * arg) {
             printf("Error in receiving message!\n");
             terminateProgram(serverRx, clientTx);
         }
-
-        // char str1[INET_ADDRSTRLEN];
-        // char str2[INET_ADDRSTRLEN];
-        // inet_ntop(AF_INET, &(serverRx.address), str1, INET_ADDRSTRLEN);
-        // inet_ntop(AF_INET, &(clientTx.address), str2, INET_ADDRSTRLEN);
-        // printf("our socket address: %s\n", str1);
-        // printf("our socket port: %d\n", ntohs(serverRx.port));
-        // printf("destination socket address: %s\n", str2);
-        // printf("destination socket port: %d\n", ntohs(clientTx.port));
-
-        
         // ensure string is null terminated
         terminateMessageIndex = (bytesRx < MSG_MAX_LENGTH) ? bytesRx : MSG_MAX_LENGTH - 1;
         messageRx[terminateMessageIndex] = 0;
@@ -146,10 +146,33 @@ void * runServer(void * arg) {
     return NULL;
 }
 
-void * runClient(void * arg) {
-    
+void * runClient() {
+    printf("Client is running ...\n");
+    u_int sinRemoteLen = sizeof(clientTx.sendToAddr);
+    char msg[MSG_MAX_LENGTH];
+    int bytesTx = 0;
+
+    char str2[INET_ADDRSTRLEN]= "";;
+    while(1){
+        inet_ntop(AF_INET, (struct sockaddr*) &clientTx.sendToAddr, str2, INET_ADDRSTRLEN);
+        printf("destination socket address: %s\n", str2);
+        printf("destination socket address size: %d\n", sinRemoteLen);
+
+        scanf("%[^\n]s", msg);
+        printf("message of size (%ld) is: %s\n", strlen(msg), msg);
+        
+        bytesTx = sendto(clientTx.socket, &msg, strlen(msg), 0, 
+                (struct sockaddr*) &clientTx.sendToAddr, sinRemoteLen);
+        if (bytesTx < 0) { 
+            printf("Error in sending message!\n");
+            terminateProgram(serverRx, clientTx);
+        }
+    }
     return NULL;
 }
+
+
+
 
 // Using this function to test to see if basic s-talk works
 void setupAndReceiveMessage() {
