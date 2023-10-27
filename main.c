@@ -40,7 +40,6 @@ List * pListTx;
 struct Server serverRx;
 struct Client clientTx;
 // pthread_cond_t addOkToListRxCondVar = PTHREAD_COND_INITIALIZER;  Not sure if needed
-// TODO: change naming since addOk might not be very true to what it is doing
 static pthread_mutex_t modifyListRxMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t removeOkToListTxCondVar = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t modifyListTxMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -66,6 +65,7 @@ int main(int argc, char *argv[]) {
     pthread_join(&print_thread, NULL);
     // TODO: join the next two threads
 
+    // Clean up mutexes and conditionals
     pthread_mutex_destroy(&modifyListRxMutex);
     pthread_mutex_destroy(&modifyListTxMutex);
     pthread_cond_destroy(&removeOkToListTxCondVar);
@@ -104,7 +104,7 @@ void * runServer(void * pListAsVoid) {
         terminateMessageIndex = (bytesRx < MSG_MAX_LENGTH) ? bytesRx : MSG_MAX_LENGTH - 1;
         messageRx[terminateMessageIndex] = 0;
         // Print it out to console
-        printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx);
+        printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx); // TODO: delete later
         // add it to a shared list IF there is space on it. Don't forget to free lists at the end
         char * newMessage = (char*)malloc(strlen(messageRx) + 1);
         strcpy(newMessage, messageRx);
@@ -128,13 +128,25 @@ void * printIncomingMsg(void * arg) {
     return NULL;
 }
 
+// Retrieves user's messages from consol until they enter "!"
 void * getUserMessages(void * arg) {
     bool userDone = false;
+    char * newMessage;
+    while (!userDone) {
+        newMessage = userInputMsg();
+        if (strcmp(newMessage, END_TALK_STR) == 0) { // if user enters '!' then end program
+            userDone = true;
+            break;
+        }
+        void * newMessageAsVoid = (void*)newMessage;
 
-    while(!userDone) {
+        pthread_mutex_lock(&modifyListTxMutex);
+        List_last(pListTx);
+        List_append(pListTx, newMessageAsVoid);
+        pthread_mutex_unlock(&modifyListTxMutex);
 
-        // TODO: if user enters '!' then end program
-        // TODO: signal call for runCLient to remove item from list
+        // signal call for runCLient to remove item from list
+        pthread_cond_signal(&removeOkToListTxCondVar);
     }
 }
 
@@ -142,8 +154,9 @@ void * getUserMessages(void * arg) {
 void * runClient(void * arg) {
     char* messageTx;
 
-    pthread_mutex_lock(&modifyListTxMutex);
+    // pthread_mutex_lock(&modifyListTxMutex);
     while(1) { 
+        pthread_mutex_lock(&modifyListTxMutex);
         while(List_count(pListTx) < 1) { // TODO: possibly revise this? Not sure yet
             pthread_cond_wait(&removeOkToListTxCondVar, &modifyListTxMutex);
         }
@@ -152,10 +165,14 @@ void * runClient(void * arg) {
             messageTx = List_remove(pListTx);
         }
         List_first(pListRx); // set list back to first item
+
+        
         // DO MORE STUFF WITH THE NEW MESSAGE
-        // TODO: add signal?
+
+
+        pthread_mutex_unlock(&modifyListTxMutex);
     }   
-    pthread_mutex_unlock(&modifyListTxMutex);
+    // thread_mutex_unlock(&modifyListTxMutex);
 
     return NULL;
 }
