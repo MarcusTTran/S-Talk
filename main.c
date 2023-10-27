@@ -130,11 +130,19 @@ void setupAndReceiveMessage() {
         char replyTx[MSG_MAX_LENGTH] = "Your message was received!\n";
         // sprintf(replyTx, "Your message was received: \n(%s)\n", messageRx);
         // int replyResult = replyToSender(replyTx, mySocketDescriptor, sinRemote);
-        replyToSender(replyTx, mySocketDescriptor, &sinRemote);
+        // replyToSender(replyTx, mySocketDescriptor, &sinRemote);
+        int bytesTx = sendto(mySocketDescriptor, replyTx, strlen(replyTx), FLAGS_DEFAULT, 
+        (struct sockaddr*) &sinRemote, sinRemote_len);
+        if (bytesTx == -1) {
+            printf("Error occured in replying!\n");
+            break;
+        }  
     }  
     close(mySocketDescriptor);
     // freeaddrinfo(destInfoResults);
 }   
+
+
 
 // Sends a reply in the form of a char[] to a sender name sinRemote using a user-specified socket
 int replyToSender(const char message[], int mySocket, struct sockaddr_in * sinRemote) { 
