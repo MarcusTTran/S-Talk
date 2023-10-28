@@ -32,11 +32,11 @@ struct Client client_constructor(int domain, int service, int port, char* hostNa
         exit(EXIT_FAILURE);
     }
 
-    client.interface = ((struct sockaddr_in*)myInfoResults->ai_addr)->sin_addr.s_addr;
+    // client.interface = ((struct sockaddr_in*)myInfoResults->ai_addr)->sin_addr.s_addr;
     client.address = *(struct sockaddr_in*)myInfoResults->ai_addr;
     
     // Create socket with the obtained info
-    client.socket = socket(client.domain, client.service, PROTOCOL_DEFAULT);
+    client.socket = socket(PF_INET, client.service, PROTOCOL_DEFAULT);
     // if ( bind(client.socket, (struct sockaddr*) &client.address, sizeof(client.address)) 
     //     != 0) {
     //     printf("Bind to socket failed in client constructor\n");
@@ -56,7 +56,17 @@ struct Client client_constructor(int domain, int service, int port, char* hostNa
         exit(EXIT_FAILURE);
     }
 
-    client.sendToAddr = (struct sockaddr_in*)destInfoResults->ai_addr;
+    printf("\n1.2\n");
+    // client.sendToAddr = (struct sockaddr_in*)destInfoResults->ai_addr;
+    memset(&client.sendToAddr, 0, sizeof(client.sendToAddr));
+
+    printf("\n1.3\n");
+    client.sendToAddr.sin_family = AF_INET;
+    printf("\n1.4\n");
+    client.sendToAddr.sin_port = htons(destPort);
+    printf("\n1.5\n");
+    client.sendToAddr.sin_addr.s_addr = inet_addr(hostName);
+
 
     freeaddrinfo(destInfoResults);
     freeaddrinfo(myInfoResults);

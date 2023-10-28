@@ -11,7 +11,7 @@ struct Server {
     int socket;
 
     // for ip address
-    u_long interface;
+    // u_long interface;
     int port;
     struct sockaddr_in address;
 };

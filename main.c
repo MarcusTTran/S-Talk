@@ -34,6 +34,8 @@ char destName[REMOTE_NAME_BUFFER];
 struct Server serverRx;
 struct Client clientTx;
 
+struct sockaddr_in tempAddrOur;
+struct sockaddr_in tempAddrDestination;
 
 void* testThreads(void* arg)
 {
@@ -73,20 +75,24 @@ int main(int argc, char *argv[]) {
 // //    pthread_t server_thread;
 // //    pthread_create(server_thread, NULL, runServer, NULL);
 
-       
+    printf("\n1\n");
     clientTx = client_constructor(AF_INET, SOCK_DGRAM, myPortNum, destName, destPortNum);
     
-    char str2[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &(clientTx.sendToAddr), str2, INET_ADDRSTRLEN);
-    printf("destination socket address: %s\n", str2);
-    printf("destination socket port: %d\n", ntohs(clientTx.destPort));
-    
+    printf("\n2\n");
     serverRx = server_constructor(AF_INET, SOCK_DGRAM, PROTOCOL_DEFAULT, myPortNum);
     
-    char str1[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &(serverRx.address), str1, INET_ADDRSTRLEN);
-    printf("our socket address: %s\n", str1);
-    printf("our socket port: %d\n", ntohs(serverRx.port));
+    printf("\nAfter server and client creation, data:\n");
+    // char str2[INET_ADDRSTRLEN];
+    // inet_ntop(AF_INET, &(clientTx.sendToAddr), str2, INET_ADDRSTRLEN);
+    struct sockaddr_in temp1 = clientTx.sendToAddr;
+    struct sockaddr_in temp2 = serverRx.address;
+    printf("    destination socket address: %s\n", inet_ntoa(temp1.sin_addr));
+    printf("    destination socket port: %d\n", ntohs(temp1.sin_port));
+    
+    // char str1[INET_ADDRSTRLEN];
+    // inet_ntop(AF_INET, &(serverRx.address), str1, INET_ADDRSTRLEN);
+    printf("    our socket address: %s\n", inet_ntoa(temp2.sin_addr));
+    printf("    our socket port: %d\n\n", ntohs(temp2.sin_port));
     
 
 
@@ -115,9 +121,30 @@ void initTalkArgs(int argc, char *argv[]) {
     }
     destPortNum = atoi(argv[3]);
 
+    printf("\nAfter initialization of ports and addresses, data:\n");
     printf("    our port: %d\n", myPortNum);
     printf("    destintion address: %s\n", destName);
     printf("    destination port: %d\n\n", destPortNum);
+
+    //check if the internet address converts properly
+
+    // printf("After converting str to addr and back:\n");
+    // struct sockaddr_in temp;
+    
+    // inet_aton(destName, &(temp.sin_addr));
+    // // char str[INET_ADDRSTRLEN] = inet_ntoa(temp.sin_addr);
+    // printf("    destintion address: %s\n\n", inet_ntoa(temp.sin_addr));
+
+    // memset(&tempAddrOur, 0, sizeof(tempAddrOur));
+    // memset(&tempAddrOur, 0, sizeof(tempAddrOur));
+    // tempAddrOur.sin_family = AF_INET;
+    // tempAddrOur.sin_port = htons(myPortNum);
+    // tempAddrOur.sin_addr.s_addr = htonl(destName);
+    // tempAddrDestination.sin_family = AF_INET;
+    // tempAddrDestination.sin_port = htons(destPortNum);
+    // tempAddrDestination.sin_addr.s_addr = htonl(destName);
+
+    return;
 }
 
 
@@ -133,7 +160,7 @@ void * runServer(void * arg) {
                     (struct sockaddr*) &clientTx.sendToAddr, &sinRemoteLen);
         if (bytesRx == -1) { 
             printf("Error in receiving message!\n");
-            terminateProgram(serverRx, clientTx);
+            // terminateProgram(serverRx, clientTx);
         }
         // ensure string is null terminated
         terminateMessageIndex = (bytesRx < MSG_MAX_LENGTH) ? bytesRx : MSG_MAX_LENGTH - 1;
@@ -149,24 +176,26 @@ void * runServer(void * arg) {
 void * runClient() {
     printf("Client is running ...\n");
     u_int sinRemoteLen = sizeof(clientTx.sendToAddr);
-    char msg[MSG_MAX_LENGTH];
+    char msg[MSG_MAX_LENGTH] = "Hello world 1";
     int bytesTx = 0;
+    bool check = 0;
+    char x;
 
-    char str2[INET_ADDRSTRLEN]= "";;
-    while(1){
-        inet_ntop(AF_INET, (struct sockaddr*) &clientTx.sendToAddr, str2, INET_ADDRSTRLEN);
-        printf("destination socket address: %s\n", str2);
-        printf("destination socket address size: %d\n", sinRemoteLen);
+    while(check == 0){
+        printf("    destination socket address: %s\n", inet_ntoa(clientTx.sendToAddr.sin_addr));
+        printf("    destination socket address size: %d\n", sinRemoteLen);
 
-        scanf("%[^\n]s", msg);
+        scanf("%c", &x);
+        
         printf("message of size (%ld) is: %s\n", strlen(msg), msg);
         
-        bytesTx = sendto(clientTx.socket, &msg, strlen(msg), 0, 
+        bytesTx = sendto(clientTx.socket, msg, strlen(msg) + 1, 0, 
                 (struct sockaddr*) &clientTx.sendToAddr, sinRemoteLen);
         if (bytesTx < 0) { 
             printf("Error in sending message!\n");
-            terminateProgram(serverRx, clientTx);
+            // terminateProgram(serverRx, clientTx);
         }
+        // check = 1;
     }
     return NULL;
 }

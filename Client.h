@@ -13,14 +13,14 @@ struct Client {
     int socket;
 
     // for ip address
-    u_long interface;
+    // u_long interface;
     int port;
     struct sockaddr_in address;
     char* hostName;
 
     // for destination
     int destPort;
-    struct sockaddr_in * sendToAddr;
+    struct sockaddr_in sendToAddr;
 };
 
 char* client_request();
