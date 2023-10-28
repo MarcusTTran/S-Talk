@@ -61,6 +61,7 @@
     "stdlib.h": "c",
     "string.h": "c",
     "list.h": "c",
-    "pthread.h": "c"
+    "pthread.h": "c",
+    "headers.h": "c"
   }
 }

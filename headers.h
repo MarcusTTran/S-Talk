@@ -16,4 +16,6 @@ typedef unsigned long u_long;
 #define FLAGS_DEFAULT 0
 #define MSG_MAX_LENGTH 256
 #define END_TALK_STR "!"
+#define YOUR_NAME_STR "You"
+#define PEER_NAME_STR "Friend"
 

@@ -13,6 +13,7 @@
 char * userInputMsg() {
     char msgRequest[MSG_MAX_LENGTH];
     memset(msgRequest, 0, MSG_MAX_LENGTH);
+    printf("You: ");
     fgets(msgRequest, sizeof(msgRequest), stdin);
     // null-terminate the string
     size_t msgLen = strlen(msgRequest);

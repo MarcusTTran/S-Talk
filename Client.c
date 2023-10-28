@@ -37,11 +37,11 @@ struct Client client_constructor(int domain, int service, int port, char* hostNa
     
     // Create socket with the obtained info
     client.socket = socket(client.domain, client.service, PROTOCOL_DEFAULT);
-    if ( bind(client.socket, (struct sockaddr*) &client.address, sizeof(client.address)) 
-        != 0) {
-        printf("Bind to socket failed in client constructor\n");
-        exit(EXIT_FAILURE);
-    }
+    // if ( bind(client.socket, (struct sockaddr*) &client.address, sizeof(client.address)) 
+    //     != 0) {
+    //     printf("Bind to socket failed in client constructor\n");
+    //     exit(EXIT_FAILURE);
+    // }
 
     // Setup info for destination the client will be sending to
     client.destPort = destPort;
@@ -51,12 +51,15 @@ struct Client client_constructor(int domain, int service, int port, char* hostNa
     struct addrinfo * destInfoResults;
     statusOfAddrInfo = getaddrinfo(hostName, destPortStr, &hints, &destInfoResults);
     if (statusOfAddrInfo != 0) {
-        // fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(statusOfAddrInfo));
         printf("Error in client constructor (remote): getaddrinfo\n");
         exit(EXIT_FAILURE);
     }
 
-    client.sendToAddr = (struct sockaddr_in*)destInfoResults->ai_addr;
+    // client.sendToAddr = (struct sockaddr_in*)destInfoResults->ai_addr;
+    client.sendToAddr->sin_family = domain;
+    client.sendToAddr->sin_port = htons(destPort);
+    struct sockaddr_in* address = (struct sockaddr_in*)(destInfoResults->ai_addr);
+    client.sendToAddr->sin_addr.s_addr = address->sin_addr.s_addr;
 
     freeaddrinfo(destInfoResults);
     freeaddrinfo(myInfoResults);

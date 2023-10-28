@@ -7,7 +7,7 @@
 
 #define PORT_LEN 10
 
-struct Server server_constructor(int domain, int service, int protocol, int port){
+struct Server server_constructor(int domain, int service, int protocol, int port) {
     struct Server server;
 
     // initialize member fields of server
