@@ -236,8 +236,14 @@ void * runClient(void * pListAsVoid) {
 // Sends a reply in the form of a char[] to a sender name sinRemote using a user-specified socket
 int replyToSender(const char message[], int mySocket, struct sockaddr_in * sinRemote) { 
     socklen_t sinRemoteLen = sizeof(*sinRemote);
+
+    char ipString[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &sinRemote->sin_addr.s_addr, ipString, sizeof(ipString));
+    printf("Inside replyToSender: %s\n", ipString); // TODO: delete later
+
+
     int bytesTx = sendto(mySocket, message, strlen(message), FLAGS_DEFAULT, 
-        (struct sockaddr*) &sinRemote, sinRemoteLen);
+        (struct sockaddr*)sinRemote, sinRemoteLen);
     if (bytesTx == -1) {
         return -1;
     } 

@@ -21,6 +21,10 @@ struct Client {
     // for destination
     int destPort;
     struct sockaddr_in * sendToAddr;
+
+    // for getaddrinfo results
+    struct addrinfo * myInfoResultsGlobal;
+    struct addrinfo * destInfoResutlsGlobal;
 };
 
 char* client_request();

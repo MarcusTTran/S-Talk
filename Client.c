@@ -5,8 +5,6 @@
 #include <stdio.h>
 
 
-char* client_request();
-
 //initializing client object
 struct Client client_constructor(int domain, int service, int port, char* hostName, int destPort) {
     struct Client client;
@@ -63,15 +61,19 @@ struct Client client_constructor(int domain, int service, int port, char* hostNa
     // // struct sockaddr_in* address = (struct sockaddr_in*)(destInfoResults->ai_addr);
     // client.sendToAddr->sin_addr.s_addr = INADDR
 
-     char ipString[INET_ADDRSTRLEN];
+    char ipString[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &client.sendToAddr->sin_addr.s_addr, ipString, sizeof(ipString));
     printf("%s\n", ipString); // TODO: delete later
 
-    freeaddrinfo(destInfoResults);
-    freeaddrinfo(myInfoResults);
+    // freeaddrinfo(destInfoResults);
+    // freeaddrinfo(myInfoResults);
+    client.myInfoResultsGlobal = myInfoResults;
+    client.destInfoResutlsGlobal = destInfoResults;
     return client;
 }
 
 void closeClient(struct Client client) {
+    freeaddrinfo(client.myInfoResultsGlobal);
+    freeaddrinfo(client.destInfoResutlsGlobal);
     close(client.socket);
 }
