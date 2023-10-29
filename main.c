@@ -26,7 +26,7 @@ void * runClient(void * pListAsVoid);
 void * printIncomingMsg(void * pListAsVoid);
 void * getUserMessages(void * pListAsVoid);
 int replyToSender(const char message[], int mySocket, struct sockaddr_in * sinRemote);
-void deallocateMutexesAndConditionals(pthread_t * mutex1, pthread_t * mutex2, pthread_cond_t * cond1, pthread_cond_t * cond2);
+void deallocateMutexesAndConditionals(pthread_mutex_t * mutex1, pthread_mutex_t * mutex2, pthread_cond_t * cond1, pthread_cond_t * cond2);
 void freeItem(void * pItem);
 void prepareToTerminateProgram(struct Server server, struct Client client, List * pList1, List * pList2);
 
@@ -232,7 +232,7 @@ int replyToSender(const char message[], int mySocket, struct sockaddr_in * sinRe
     return 0;
 }
 
-void deallocateMutexesAndConditionals(pthread_t * mutex1, pthread_t * mutex2, pthread_cond_t * cond1, pthread_cond_t * cond2) {
+void deallocateMutexesAndConditionals(pthread_mutex_t * mutex1, pthread_mutex_t * mutex2, pthread_cond_t * cond1, pthread_cond_t * cond2) {
     // pthread_mutex_destroy(mutex1);
     // pthread_mutex_destroy(mutex2);
     // pthread_cond_destroy(cond1);
