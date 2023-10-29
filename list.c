@@ -193,6 +193,9 @@ int List_count(List* pList) {
 void* List_first(List* pList) {
     pList->pCurrentItemNode = (pList->pHead != NULL 
         && pList->size > 0) ? pList->pHead : NULL;
+    if (pList->pCurrentItemNode == NULL) {
+        return NULL;
+    }
     return pList->pCurrentItemNode->pItem;
 }
 
