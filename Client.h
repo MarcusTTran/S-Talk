@@ -27,7 +27,6 @@ struct Client {
     struct addrinfo * destInfoResutlsGlobal;
 };
 
-char* client_request();
 
 
 //initializing client object

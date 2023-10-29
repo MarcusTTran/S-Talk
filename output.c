@@ -7,12 +7,13 @@
 #include "output.h"
 
 void printMessage(const char* msgReceived, const char* userName) {
-    // printf("\n\t%s: %s\n", userName, msgReceived);
+    
     printf("You: ");
     fflush(stdout);
-    // printf("\t\n");
+
     size_t msgLen = strlen(msgReceived);
     write(STDOUT_FILENO, msgReceived, msgLen);
+    
     printf("\n");
     fflush(stdout);
 }

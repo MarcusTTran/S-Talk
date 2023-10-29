@@ -14,6 +14,7 @@ struct Server {
     u_long interface;
     int port;
     struct sockaddr_in address;
+
 };
 
 struct Server server_constructor(int domain, int service, int protocol, int port);

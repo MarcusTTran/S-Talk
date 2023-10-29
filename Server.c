@@ -31,7 +31,6 @@ struct Server server_constructor(int domain, int service, int protocol, int port
     struct addrinfo* addrInfoResults;
     int result = getaddrinfo(NULL, portStr, &hints, &addrInfoResults);
     if (result != 0) {
-        // fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(addrInfoResults));
         printf("Error in server constructor: getaddrinfo\n");
         exit(EXIT_FAILURE);
     }

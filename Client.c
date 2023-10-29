@@ -25,7 +25,6 @@ struct Client client_constructor(int domain, int service, int port, char* hostNa
 
     int statusOfAddrInfo = getaddrinfo(NULL, portStr, &hints, &myInfoResults);
     if (statusOfAddrInfo != 0) {
-        // fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(statusOfAddrInfo));
         printf("Error in client constructor (client): getaddrinfo\n");
         exit(EXIT_FAILURE);
     }
@@ -55,18 +54,7 @@ struct Client client_constructor(int domain, int service, int port, char* hostNa
     }
     client.sendToAddr = (struct sockaddr_in*)destInfoResults->ai_addr;
     
-    // memset(&client.sendToAddr, 0, sizeof(client.sendToAddr));
-    // client.sendToAddr->sin_family = domain;
-    // client.sendToAddr->sin_port = htons(destPort);
-    // // struct sockaddr_in* address = (struct sockaddr_in*)(destInfoResults->ai_addr);
-    // client.sendToAddr->sin_addr.s_addr = INADDR
 
-    char ipString[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &client.sendToAddr->sin_addr.s_addr, ipString, sizeof(ipString));
-    printf("%s\n", ipString); // TODO: delete later
-
-    // freeaddrinfo(destInfoResults);
-    // freeaddrinfo(myInfoResults);
     client.myInfoResultsGlobal = myInfoResults;
     client.destInfoResutlsGlobal = destInfoResults;
     return client;

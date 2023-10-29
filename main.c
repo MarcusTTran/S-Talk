@@ -26,7 +26,6 @@ void * runClient(void * pListAsVoid);
 void * printIncomingMsg(void * pListAsVoid);
 void * getUserMessages(void * pListAsVoid);
 int replyToSender(const char message[], int mySocket, struct sockaddr_in * sinRemote);
-void deallocateMutexesAndConditionals(pthread_mutex_t * mutex1, pthread_mutex_t * mutex2, pthread_cond_t * cond1, pthread_cond_t * cond2);
 void freeItem(void * pItem);
 void prepareToTerminateProgram(struct Server server, struct Client client, List * pList1, List * pList2);
 
@@ -86,9 +85,7 @@ int main(int argc, char *argv[]) {
     pthread_join(client_thread, NULL);
 
     pthread_mutex_unlock(&masterThreadMutex);
-    // Clean up mutexes and conditionals
-    deallocateMutexesAndConditionals(&modifyListRxMutex, &modifyListTxMutex, 
-                                &removeOkToListRxCondVar, &removeOkToListTxCondVar);
+    // Clean up structs
     prepareToTerminateProgram(serverRx, clientTx, pListRx, pListTx);
     printEndMessage();
 
@@ -126,8 +123,7 @@ void * runServer(void * pListAsVoid) {
         // ensure string is null terminated
         terminateMessageIndex = (bytesRx < MSG_MAX_LENGTH) ? bytesRx : MSG_MAX_LENGTH - 1;
         messageRx[terminateMessageIndex] = 0;
-        // // Print it out to console
-        // printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx); // TODO: delete later
+    
         // add it to a shared list IF there is space on it. Don't forget to free lists at the end
         char * newMessage = (char*)malloc(strlen(messageRx) + 1);
         strcpy(newMessage, messageRx);
@@ -190,13 +186,12 @@ void * getUserMessages(void * pListAsVoid) {
         List_last(pList);
         if (List_append(pList, newMessageAsVoid) == -1) {
             printf("Error: In getUserMessages - List did not have enough nodes!\n");
-        //     prepareToTerminateProgram(serverRx, clientTx, pListRx, pListTx);
-        //     exit(EXIT_FAILURE);
+            // prepareToTerminateProgram(serverRx, clientTx, pListRx, pListTx);
+            // exit(EXIT_FAILURE);
         }
         // signal call for runCLient to remove item from list
         pthread_cond_signal(&removeOkToListTxCondVar);
         pthread_mutex_unlock(&modifyListTxMutex);
-        // TODO: maybe add that signal here?
     }
     return NULL;
 }
@@ -208,7 +203,7 @@ void * runClient(void * pListAsVoid) {
 
     while(1) { 
         pthread_mutex_lock(&modifyListTxMutex);
-        while(List_count(pList) < 1) { // TODO: possibly revise this? Not sure yet
+        while(List_count(pList) < 1) { 
             pthread_cond_wait(&removeOkToListTxCondVar, &modifyListTxMutex);
         }
         
@@ -237,11 +232,6 @@ void * runClient(void * pListAsVoid) {
 int replyToSender(const char message[], int mySocket, struct sockaddr_in * sinRemote) { 
     socklen_t sinRemoteLen = sizeof(*sinRemote);
 
-    char ipString[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &sinRemote->sin_addr.s_addr, ipString, sizeof(ipString));
-    printf("Inside replyToSender: %s\n", ipString); // TODO: delete later
-
-
     int bytesTx = sendto(mySocket, message, strlen(message), FLAGS_DEFAULT, 
         (struct sockaddr*)sinRemote, sinRemoteLen);
     if (bytesTx == -1) {
@@ -250,14 +240,6 @@ int replyToSender(const char message[], int mySocket, struct sockaddr_in * sinRe
     return 0;
 }
 
-void deallocateMutexesAndConditionals(pthread_mutex_t * mutex1, pthread_mutex_t * mutex2, pthread_cond_t * cond1, pthread_cond_t * cond2) {
-    // pthread_mutex_destroy(mutex1);
-    // pthread_mutex_destroy(mutex2);
-    // pthread_cond_destroy(cond1);
-    // pthread_cond_destroy(cond2);
-    
-    // Don't need this code above since threads are static
-}
 
 // FREE_FN for List implementation
 void freeItem(void * pItem) {
