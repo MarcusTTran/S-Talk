@@ -41,7 +41,7 @@ struct Server server_constructor(int domain, int service, int protocol, int port
     server.address = *(struct sockaddr_in*)addrInfoResults->ai_addr; 
 
     // Create socket with the obtained info
-    server.socket = socket(PF_INET, server.service, server.protocol);
+    server.socket = socket(AF_INET, server.service, server.protocol);
     //bind should take the address of the other machine/destination address
     if ( bind(server.socket, (struct sockaddr*) &server.address, sizeof(server.address)) 
         != 0) {
