@@ -199,6 +199,9 @@ void* List_first(List* pList) {
 void* List_last(List* pList) {
     pList->pCurrentItemNode = (pList->pLast != NULL 
         && pList->size != 0) ? pList->pLast : NULL;
+    if (pList->pCurrentItemNode == NULL) {
+        return NULL;
+    }
     return pList->pCurrentItemNode->pItem;
 }
 

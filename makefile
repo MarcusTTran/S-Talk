@@ -1,7 +1,7 @@
 all : s-talk
 
 s-talk: client.o server.o list.o input.o output.o main.o
-	gcc -g -pedantic -Wall -Werror -std=c99 -o s-talk -pthread main.o list.o client.o server.o
+	gcc -g -pedantic -Wall -Werror -std=c99 -o s-talk -pthread main.o list.o client.o server.o input.o output.o
 
 main.o: main.c 
 	gcc -g -pedantic -Wall -Werror -std=c99 -c main.c

@@ -1,3 +1,4 @@
+
 // Will be used to handle the input from the keyboard to sending messages
 // - Will have its own thread to execute its code
 #include <stdio.h>
@@ -6,6 +7,7 @@
 #include "headers.h"
 #include <pthread.h>
 #include "list.h"
+#include "input.h"
 
 // Dynamically allocates a string from user input and returns a pointer to it
 // - String will be null terminated
@@ -25,4 +27,5 @@ char * userInputMsg() {
     strcpy(msgPtr, msgRequest);
     return msgPtr;
 }
+
 

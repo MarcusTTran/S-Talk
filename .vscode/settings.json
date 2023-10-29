@@ -62,6 +62,7 @@
     "string.h": "c",
     "list.h": "c",
     "pthread.h": "c",
-    "headers.h": "c"
+    "headers.h": "c",
+    "stdio.h": "c"
   }
 }

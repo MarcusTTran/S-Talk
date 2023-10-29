@@ -9,8 +9,8 @@
 #include "list.h"
 #include "Server.h"
 #include "Client.h"
-#include "input.c"
-#include "output.c"
+#include "input.h"
+#include "output.h"
 #include "headers.h"
 
 // CSIL MACHINE IP: 127.0.0.1
@@ -47,7 +47,7 @@ static pthread_mutex_t modifyListTxMutex = PTHREAD_MUTEX_INITIALIZER;
 
 static pthread_cond_t endProgramCondVar = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t masterThreadMutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t printOkCondVar = PTHREAD_COND_INITIALIZER;
+// static pthread_cond_t printOkCondVar = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t stdoutMutex = PTHREAD_MUTEX_INITIALIZER;
 // bool userExit = false;
 
