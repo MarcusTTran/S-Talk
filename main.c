@@ -59,17 +59,17 @@ int main(int argc, char *argv[]) {
     clientTx = client_constructor(AF_INET, SOCK_DGRAM, myPortNum, destName, destPortNum);
     pListRx = List_create(); // for incoming messages and output thread
     pListTx = List_create(); // for outgoing messages and input thread
-    
+
     pthread_mutex_lock(&masterThreadMutex);
     // Create and run threads
     pthread_t server_thread;
-    assert(pthread_create(&server_thread, NULL, runServer, &pListRx) == 0);
+    assert(pthread_create(&server_thread, NULL, runServer, NULL) == 0);
     pthread_t print_thread;
-    assert(pthread_create(&print_thread, NULL, printIncomingMsg, &pListRx) == 0);
+    assert(pthread_create(&print_thread, NULL, printIncomingMsg, NULL) == 0);
     pthread_t keyboard_thread;
-    assert(pthread_create(&keyboard_thread, NULL, getUserMessages, &pListTx) == 0);
+    assert(pthread_create(&keyboard_thread, NULL, getUserMessages, NULL) == 0);
     pthread_t client_thread;
-    assert(pthread_create(&client_thread, NULL, runClient, pListTx) == 0);
+    assert(pthread_create(&client_thread, NULL, runClient, NULL) == 0);
 
     // Wait until the user wants to exit    
     pthread_cond_wait(&endProgramCondVar, &masterThreadMutex);
@@ -109,7 +109,7 @@ void initTalkArgs(int argc, char *argv[]) {
 // thread which receives messages from peer and puts it into a shared list
 // then signals for another thread to print it out to the console
 void * runServer(void * pListAsVoid) {
-    List * pList = (List*)pListAsVoid;
+    List * pList = pListRx;
     socklen_t sinRemoteLen = sizeof(clientTx.sendToAddr);
     char messageRx[MSG_MAX_LENGTH];
     int bytesRx = 0;
@@ -139,9 +139,8 @@ void * runServer(void * pListAsVoid) {
             printf("Error: List did not have enough nodes!\n");
             prepareToTerminateProgram(serverRx, clientTx, pListRx, pListTx);
             exit(EXIT_FAILURE);
-        } else {
-            pthread_cond_signal(&removeOkToListRxCondVar);
         }
+        pthread_cond_signal(&removeOkToListRxCondVar);
         pthread_mutex_unlock(&modifyListRxMutex);
     }
     
@@ -150,7 +149,7 @@ void * runServer(void * pListAsVoid) {
 
 // print messages to screen that was given by server thread
 void * printIncomingMsg(void * pListAsVoid) {
-    List * pList = (List*)pListAsVoid;
+    List * pList = pListRx;
     char* messageRx;
     while(1) {
         pthread_mutex_lock(&modifyListRxMutex);
@@ -176,7 +175,7 @@ void * printIncomingMsg(void * pListAsVoid) {
 
 // Retrieves user's messages from consol until they enter "!"
 void * getUserMessages(void * pListAsVoid) {
-    List * pList = (List*)pListAsVoid;
+    List * pList = pListTx;
     char * newMessage;
     while (1) {
         newMessage = userInputMsg();
@@ -193,19 +192,18 @@ void * getUserMessages(void * pListAsVoid) {
             printf("Error: In getUserMessages - List did not have enough nodes!\n");
         //     prepareToTerminateProgram(serverRx, clientTx, pListRx, pListTx);
         //     exit(EXIT_FAILURE);
-        // } else { 
-            // signal call for runCLient to remove item from list
-            pthread_cond_signal(&removeOkToListTxCondVar);
         }
+        // signal call for runCLient to remove item from list
+        pthread_cond_signal(&removeOkToListTxCondVar);
         pthread_mutex_unlock(&modifyListTxMutex);
-
+        // TODO: maybe add that signal here?
     }
     return NULL;
 }
 
 // Thread which gets messages from user 
 void * runClient(void * pListAsVoid) {
-    List * pList = (List*)pListAsVoid;
+    List * pList = pListTx;
     char* messageTx;
 
     while(1) { 

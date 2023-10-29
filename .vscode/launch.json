@@ -8,8 +8,8 @@
       "args": ["6969", "LAPTOP-A9ULS2CP", "4200"],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "${workspaceFolder}",
-      "program": "${workspaceFolder}/s-talk",
+      "cwd": "${workspaceRoot}",
+      "program": "${workspaceRoot}/s-talk",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

@@ -42,20 +42,30 @@ struct Client client_constructor(int domain, int service, int port, char* hostNa
     client.destPort = destPort;
     char destPortStr[10];
     sprintf(destPortStr, "%d", destPort); // get the destination port number in a string
+    
+    struct addrinfo destHints;
+    memset(&destHints, 0, sizeof(destHints));
+    destHints.ai_family = AF_INET;
+    destHints.ai_socktype = SOCK_DGRAM;
+    destHints.ai_protocol = IPPROTO_UDP;
 
     struct addrinfo * destInfoResults;
-    statusOfAddrInfo = getaddrinfo(hostName, destPortStr, &hints, &destInfoResults);
+    statusOfAddrInfo = getaddrinfo(hostName, destPortStr, &destHints, &destInfoResults);
     if (statusOfAddrInfo != 0) {
         printf("Error in client constructor (remote): getaddrinfo\n");
         exit(EXIT_FAILURE);
     }
-
     client.sendToAddr = (struct sockaddr_in*)destInfoResults->ai_addr;
+    
     // memset(&client.sendToAddr, 0, sizeof(client.sendToAddr));
     // client.sendToAddr->sin_family = domain;
     // client.sendToAddr->sin_port = htons(destPort);
-    // struct sockaddr_in* address = (struct sockaddr_in*)(destInfoResults->ai_addr);
-    // client.sendToAddr->sin_addr.s_addr = address->sin_addr.s_addr;
+    // // struct sockaddr_in* address = (struct sockaddr_in*)(destInfoResults->ai_addr);
+    // client.sendToAddr->sin_addr.s_addr = INADDR
+
+     char ipString[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &client.sendToAddr->sin_addr.s_addr, ipString, sizeof(ipString));
+    printf("%s\n", ipString); // TODO: delete later
 
     freeaddrinfo(destInfoResults);
     freeaddrinfo(myInfoResults);
