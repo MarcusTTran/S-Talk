@@ -13,7 +13,8 @@ void printMessage(const char* msgReceived, const char* userName) {
     // printf("\t\n");
     size_t msgLen = strlen(msgReceived);
     write(STDOUT_FILENO, msgReceived, msgLen);
-    // printf("\n");
+    printf("\n");
+    fflush(stdout);
 }
 
 void printEndMessage() {
