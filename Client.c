@@ -50,12 +50,12 @@ struct Client client_constructor(int domain, int service, int port, char* hostNa
         exit(EXIT_FAILURE);
     }
 
-    // client.sendToAddr = (struct sockaddr_in*)destInfoResults->ai_addr;
-    client.sendToAddr = NULL;
-    client.sendToAddr->sin_family = domain;
-    client.sendToAddr->sin_port = htons(destPort);
-    struct sockaddr_in* address = (struct sockaddr_in*)(destInfoResults->ai_addr);
-    client.sendToAddr->sin_addr.s_addr = address->sin_addr.s_addr;
+    client.sendToAddr = (struct sockaddr_in*)destInfoResults->ai_addr;
+    // memset(&client.sendToAddr, 0, sizeof(client.sendToAddr));
+    // client.sendToAddr->sin_family = domain;
+    // client.sendToAddr->sin_port = htons(destPort);
+    // struct sockaddr_in* address = (struct sockaddr_in*)(destInfoResults->ai_addr);
+    // client.sendToAddr->sin_addr.s_addr = address->sin_addr.s_addr;
 
     freeaddrinfo(destInfoResults);
     freeaddrinfo(myInfoResults);

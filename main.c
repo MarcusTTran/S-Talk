@@ -45,8 +45,10 @@ static pthread_mutex_t modifyListRxMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t removeOkToListTxCondVar = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t modifyListTxMutex = PTHREAD_MUTEX_INITIALIZER;
 
-static pthread_cond_t endProgram = PTHREAD_COND_INITIALIZER;
-static pthread_mutex_t masterThread = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t endProgramCondVar = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t masterThreadMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t printOkCondVar = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t stdoutMutex = PTHREAD_MUTEX_INITIALIZER;
 // bool userExit = false;
 
 
@@ -58,7 +60,7 @@ int main(int argc, char *argv[]) {
     pListRx = List_create(); // for incoming messages and output thread
     pListTx = List_create(); // for outgoing messages and input thread
     
-    pthread_mutex_lock(&masterThread);
+    pthread_mutex_lock(&masterThreadMutex);
     // Create and run threads
     pthread_t server_thread;
     assert(pthread_create(&server_thread, NULL, runServer, &pListRx) == 0);
@@ -70,7 +72,7 @@ int main(int argc, char *argv[]) {
     assert(pthread_create(&client_thread, NULL, runClient, pListTx) == 0);
 
     // Wait until the user wants to exit    
-    pthread_cond_wait(&endProgram, &masterThread);
+    pthread_cond_wait(&endProgramCondVar, &masterThreadMutex);
 
     // Cancel threads remaining 3 threads
     pthread_cancel(server_thread);
@@ -83,7 +85,7 @@ int main(int argc, char *argv[]) {
     pthread_join(keyboard_thread, NULL);
     pthread_join(client_thread, NULL);
 
-    pthread_mutex_unlock(&masterThread);
+    pthread_mutex_unlock(&masterThreadMutex);
     // Clean up mutexes and conditionals
     deallocateMutexesAndConditionals(&modifyListRxMutex, &modifyListTxMutex, 
                                 &removeOkToListRxCondVar, &removeOkToListTxCondVar);
@@ -124,16 +126,19 @@ void * runServer(void * pListAsVoid) {
         // ensure string is null terminated
         terminateMessageIndex = (bytesRx < MSG_MAX_LENGTH) ? bytesRx : MSG_MAX_LENGTH - 1;
         messageRx[terminateMessageIndex] = 0;
-        // Print it out to console
-        printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx); // TODO: delete later
+        // // Print it out to console
+        // printf("Message received(%d bytes): '%s'\n", bytesRx, messageRx); // TODO: delete later
         // add it to a shared list IF there is space on it. Don't forget to free lists at the end
         char * newMessage = (char*)malloc(strlen(messageRx) + 1);
         strcpy(newMessage, messageRx);
         void * newMessageVoid = (void*)newMessage;
         
         pthread_mutex_lock(&modifyListRxMutex);
+        List_last(pList);
         if (List_append(pList, newMessageVoid) == -1) {
             printf("Error: List did not have enough nodes!\n");
+            prepareToTerminateProgram(serverRx, clientTx, pListRx, pListTx);
+            exit(EXIT_FAILURE);
         } else {
             pthread_cond_signal(&removeOkToListRxCondVar);
         }
@@ -156,9 +161,14 @@ void * printIncomingMsg(void * pListAsVoid) {
             messageRx = (char*)List_remove(pList);
         } else {
             printf("Error: there was no item on list to remove in printIncomingMsg()\n");
+            prepareToTerminateProgram(serverRx, clientTx, pListRx, pListTx);
+            exit(EXIT_FAILURE);
         }
         pthread_mutex_unlock(&modifyListRxMutex);
+        
+        pthread_mutex_lock(&stdoutMutex);
         printMessage(messageRx, PEER_NAME_STR);
+        pthread_mutex_unlock(&stdoutMutex);
     }
    
     return NULL;
@@ -172,7 +182,7 @@ void * getUserMessages(void * pListAsVoid) {
         newMessage = userInputMsg();
         if (strcmp(newMessage, END_TALK_STR) == 0) { // if user enters '!' then end program
             // userExit = true;
-            pthread_cond_signal(&endProgram);
+            pthread_cond_signal(&endProgramCondVar);
             pthread_exit(NULL);
         }
         void * newMessageAsVoid = (void*)newMessage;
@@ -180,8 +190,10 @@ void * getUserMessages(void * pListAsVoid) {
         pthread_mutex_lock(&modifyListTxMutex);
         List_last(pList);
         if (List_append(pList, newMessageAsVoid) == -1) {
-            printf("Error: List did not have enough nodes!\n");
-        } else { 
+            printf("Error: In getUserMessages - List did not have enough nodes!\n");
+        //     prepareToTerminateProgram(serverRx, clientTx, pListRx, pListTx);
+        //     exit(EXIT_FAILURE);
+        // } else { 
             // signal call for runCLient to remove item from list
             pthread_cond_signal(&removeOkToListTxCondVar);
         }
@@ -206,6 +218,8 @@ void * runClient(void * pListAsVoid) {
             messageTx = (char*)List_remove(pList);
         } else {
             printf("Error: there was no item on list to remove in runClient()\n");
+            // prepareToTerminateProgram(serverRx, clientTx, pListRx, pListTx);
+            // exit(EXIT_FAILURE);
         }
         List_first(pList); // set list back to first item
         
