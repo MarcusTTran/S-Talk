@@ -9,6 +9,7 @@ char* client_request();
 
 //initializing client object
 struct Client client_constructor(int domain, int service, int port, char* hostName, int destPort) {
+                                    //AF_INET,  SOCK_DGRAM,  myPortNum,   destName,    destPortNum
     struct Client client;
 
     client.domain = domain;

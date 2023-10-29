@@ -38,7 +38,12 @@ struct Server server_constructor(int domain, int service, int protocol, int port
         exit(EXIT_FAILURE);
     }
     // server.interface = ((struct sockaddr_in*)addrInfoResults->ai_addr)->sin_addr.s_addr;
-    server.address = *(struct sockaddr_in*)addrInfoResults->ai_addr; 
+    
+    // server.address = *(struct sockaddr_in*)addrInfoResults->ai_addr; 
+    server.address.sin_addr.s_addr = htonl(INADDR_ANY);
+    server.address.sin_family = AF_INET;
+    server.address.sin_port = htons(port);
+    printf("server socket address: %s\n", inet_ntoa(server.address.sin_addr));
 
     // Create socket with the obtained info
     server.socket = socket(AF_INET, server.service, server.protocol);
