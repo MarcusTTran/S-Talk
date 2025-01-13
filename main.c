@@ -95,7 +95,8 @@ int main(int argc, char *argv[]) {
 void initTalkArgs(int argc, char *argv[]) {
     myPortNum = atoi(argv[1]);
     if (strlen(argv[2]) < REMOTE_NAME_BUFFER) {
-        strcpy(destName, argv[2]);
+        strncpy(destName, argv[2], sizeof(destName) - 1);
+        destName[sizeof(destName) - 1] = '\0';
     } else {
         printf("Invalid remote machine name. Please try again.\n");
         exit(0);
@@ -218,7 +219,7 @@ void * runClient(void * pListAsVoid) {
         
         int reply_result = replyToSender(messageTx, clientTx.socket, clientTx.sendToAddr);
         if(reply_result == -1) {
-            printf("Error occured in sending message to peer!\n");
+            printf("Error occured in sending message to peer!\n"); // TODO: Fix error here? When sender sends back message it breaks!
             prepareToTerminateProgram(serverRx, clientTx, pListRx, pListTx);
             exit(EXIT_FAILURE);
         }

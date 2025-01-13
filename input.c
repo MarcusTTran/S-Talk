@@ -24,7 +24,7 @@ char * userInputMsg() {
     }
     // send it as a pointer
     char * msgPtr = (char*)malloc(strlen(msgRequest) + 1);
-    strcpy(msgPtr, msgRequest);
+    strncpy(msgPtr, msgRequest, strlen(msgRequest));
     return msgPtr;
 }
 

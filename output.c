@@ -8,7 +8,8 @@
 
 void printMessage(const char* msgReceived, const char* userName) {
     
-    printf("You: ");
+    // printf("You: ");
+    printf("Friend: ");
     fflush(stdout);
 
     size_t msgLen = strlen(msgReceived);
