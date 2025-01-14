@@ -186,7 +186,8 @@ void * getUserMessages(void * pListAsVoid) {
         pthread_mutex_lock(&modifyListTxMutex);
         List_last(pList);
         if (List_append(pList, newMessageAsVoid) == -1) {
-            printf("Error: In getUserMessages - List did not have enough nodes!\n");
+            printf("Error: In getUserMessages - List did not have enough nodes!\n"); 
+            // TODO: handle this error? Shutdown? Or maybe let it keep going?
             // prepareToTerminateProgram(serverRx, clientTx, pListRx, pListTx);
             // exit(EXIT_FAILURE);
         }
@@ -212,7 +213,7 @@ void * runClient(void * pListAsVoid) {
             messageTx = (char*)List_remove(pList);
         } else {
             printf("Error: there was no item on list to remove in runClient()\n");
-            // prepareToTerminateProgram(serverRx, clientTx, pListRx, pListTx);
+            // prepareToTerminateProgram(serverRx, clientTx, pListRx, pListTx); 
             // exit(EXIT_FAILURE);
         }
         List_first(pList); // set list back to first item
@@ -233,9 +234,20 @@ void * runClient(void * pListAsVoid) {
 int replyToSender(const char message[], int mySocket, struct sockaddr_in * sinRemote) { 
     socklen_t sinRemoteLen = sizeof(*sinRemote);
 
+    // Seg faults and FAILS before this
+    // TODO: delete later
+    printf("sin_family: %d\n", sinRemote->sin_family);
+    printf("sin_port: %d\n", ntohs(sinRemote->sin_port));
+    char ip[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(sinRemote->sin_addr), ip, INET_ADDRSTRLEN);
+    printf("sin_addr: %s\n", ip);
+
+
     int bytesTx = sendto(mySocket, message, strlen(message), FLAGS_DEFAULT, 
         (struct sockaddr*)sinRemote, sinRemoteLen);
     if (bytesTx == -1) {
+        // TODO: delete later maybe
+        perror("sendto failed");
         return -1;
     } 
     return 0;

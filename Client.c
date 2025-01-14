@@ -50,11 +50,12 @@ struct Client client_constructor(int domain, int service, int port, char* hostNa
     statusOfAddrInfo = getaddrinfo(hostName, destPortStr, &destHints, &destInfoResults);
     if (statusOfAddrInfo != 0) {
         printf("Error in client constructor (remote): getaddrinfo\n");
+        freeaddrinfo(myInfoResults); 
+        close(client.socket); 
         exit(EXIT_FAILURE);
     }
     client.sendToAddr = (struct sockaddr_in*)destInfoResults->ai_addr;
     
-
     client.myInfoResultsGlobal = myInfoResults;
     client.destInfoResutlsGlobal = destInfoResults;
     return client;

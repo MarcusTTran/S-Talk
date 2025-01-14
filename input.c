@@ -9,13 +9,14 @@
 #include "list.h"
 #include "input.h"
 
+// TODO: maybe create a tag for user when they send messages? Like "You: "? TBD
+
 // Dynamically allocates a string from user input and returns a pointer to it
 // - String will be null terminated
 // - Will not have an endline at the end 
 char * userInputMsg() {
     char msgRequest[MSG_MAX_LENGTH];
     memset(msgRequest, 0, MSG_MAX_LENGTH);
-    // printf("You: ");
     fgets(msgRequest, sizeof(msgRequest), stdin);
     // null-terminate the string
     size_t msgLen = strlen(msgRequest);
